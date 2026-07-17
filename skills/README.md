@@ -10,33 +10,27 @@ A skill is a set of instructions the AI agent loads **on demand**. The YAML fron
 
 ## Step 1 — install
 
-The `SKILL.md` format is the standard [Anthropic Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills) spec — the same folders work in both Cursor and Claude Code. Pick your tool:
+The `SKILL.md` format is the standard [Anthropic Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills) spec — the same folders work in both Cursor and Claude Code.
 
-**Cursor:**
-
-```bash
-# All skills at once, project scope (recommended)
-mkdir -p .cursor/skills && cp -r skills/* .cursor/skills/
-
-# Or personal scope — available in all your projects
-cp -r skills/* ~/.cursor/skills/
-```
-
-**Claude Code:**
+**One command (recommended):**
 
 ```bash
-# All skills at once, project scope
-mkdir -p .claude/skills && cp -r skills/* .claude/skills/
-
-# Or personal scope
-cp -r skills/* ~/.claude/skills/
+curl -fsSL https://gitlab.beda.software/emr/beda-ai-skills/-/raw/main/install.sh | bash
 ```
 
-To install a single skill, copy just its folder (e.g. `cp -r skills/fhir-emr-mapping .cursor/skills/`).
+Claude Code: add `| bash -s -- --claude`. Personal scope (all projects): add `| bash -s -- --global`.
 
-Both tools discover skills the same way and load them automatically by `description`. The `skills/` directory is the canonical source in this repo — after a `git pull` that changes skills, re-copy them.
+**Manual install** — if you already have the repo:
 
-**Cross-skill links** (e.g. `beda-sdc-forms` → `aidbox-orgbac-multitenancy`) resolve only when the related skills are copied together, which is why copying all of them at once is recommended.
+```bash
+./install.sh                              # Cursor, project scope
+./install.sh --claude --global            # Claude Code, personal scope
+mkdir -p .cursor/skills && cp -r skills/* .cursor/skills/   # copy without script
+```
+
+Both tools discover skills the same way and load them automatically by `description`. After a `git pull` that changes skills, re-run `./install.sh`.
+
+**Cross-skill links** (e.g. `fhir-emr-questionnaire` → `fhirpath`) resolve only when the related skills are copied together, which is why copying all of them at once is recommended.
 
 ## Step 2 — just work; skills load automatically
 
@@ -74,7 +68,7 @@ The skills are plain markdown, so they work anywhere:
 
 ## Contributing a new skill
 
-1. Create `skills/<skill-name>/SKILL.md` with YAML frontmatter (`name`, `description`). The `description` decides when the agent auto-loads the skill — write it as "Use when …" with concrete triggers.
+1. Create `beda-ai-skills/skills/<skill-name>/SKILL.md` with YAML frontmatter (`name`, `description`). The `description` decides when the agent auto-loads the skill — write it as "Use when …" with concrete triggers.
 2. Keep `SKILL.md` short and focused; move deep detail to `REFERENCE.md` **inside the same folder** — skills must stay self-contained when copied.
 3. Add the skill to the catalog in [AGENTS.md](../AGENTS.md).
 4. Test: copy to `.cursor/skills/` (or `.claude/skills/`), ask a matching question, and verify the agent applies the skill's rules.

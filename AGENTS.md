@@ -6,10 +6,10 @@ Central index for AI-assisted development in the Beda FHIR EMR ecosystem. Use th
 
 | Layer | Location | Purpose |
 | --- | --- | --- |
-| **Index** | `AGENTS.md` (this file) | Navigation |
-| **Skills** | `skills/` | Self-contained domain guides (SKILL.md + REFERENCE.md), auto-discoverable by Cursor |
-| **AI workflow** | `ai-tools-experience.md` | How the team uses Claude, Cursor, and related tools |
-| **Examples** | `agents.example.md` | Template for project-specific agent overlays |
+| **Index** | `beda-ai-skills/AGENTS.md` (this file) | Navigation |
+| **Skills** | `beda-ai-skills/skills/` | Self-contained domain guides (SKILL.md + REFERENCE.md), auto-discoverable by Cursor |
+| **AI workflow** | `beda-ai-skills/ai-tools-experience.md` | How the team uses Claude, Cursor, and related tools |
+| **Examples** | `beda-ai-skills/agents.example.md` | Template for project-specific agent overlays |
 
 Each skill is a self-contained folder: `SKILL.md` (entry point, loaded by the agent) plus `REFERENCE.md` (full guide).
 
@@ -19,15 +19,13 @@ Each skill is a self-contained folder: `SKILL.md` (entry point, loaded by the ag
 
 The `SKILL.md` format is the standard Anthropic Agent Skills spec — the same folders work in **Cursor and Claude Code**.
 
-**One-time setup** — copy the skills into your tool's skills directory:
+**One-time setup:**
 
 ```bash
-# Cursor (project scope, recommended for this repo)
-mkdir -p .cursor/skills && cp -r skills/* .cursor/skills/
-
-# Claude Code (project scope)
-mkdir -p .claude/skills && cp -r skills/* .claude/skills/
+curl -fsSL https://gitlab.beda.software/emr/beda-ai-skills/-/raw/main/install.sh | bash
 ```
+
+Or from a local clone: `cd beda-ai-skills && ./install.sh` (Cursor) / `./install.sh --claude` (Claude Code).
 
 **Then just work normally.** You don't "call" a skill — the agent reads each skill's `description` and loads it automatically when your request matches. For example:
 
@@ -35,7 +33,7 @@ mkdir -p .claude/skills && cp -r skills/* .claude/skills/
 | --- | --- |
 | "Add a BMI calculated field to the vitals questionnaire" | `fhir-emr-questionnaire` |
 | "Write an extraction mapping for this form" | `fhir-emr-mapping` |
-| "Why does my form change not show up after editing the YAML?" | `beda-sdc-forms` |
+| "Why does my FHIRPath expression return empty / how do I sum optional fields?" | `fhirpath` |
 | "I get 403 'resource not available in Organization'" | `aidbox-orgbac-multitenancy` |
 | "Add a component for the patient card" | `fhir-emr-frontend` |
 | "Translate the new strings" | `translate` |
@@ -54,7 +52,7 @@ Step-by-step usage guide with worked examples: [skills/README.md](skills/README.
 | --- | --- |
 | `resources/**/Questionnaire/*.yaml` | [fhir-emr-questionnaire](skills/fhir-emr-questionnaire/SKILL.md) |
 | `resources/**/Mapping/*.yaml` | [fhir-emr-mapping](skills/fhir-emr-mapping/SKILL.md) |
-| SDC forms, `$populate` / `$extract`, form widgets | [beda-sdc-forms](skills/beda-sdc-forms/SKILL.md) |
+| FHIRPath expressions (Questionnaire, Mapping, frontend TS, backend) | [fhirpath](skills/fhirpath/SKILL.md) |
 | OrgBAC, multi-tenancy, AccessPolicy | [aidbox-orgbac-multitenancy](skills/aidbox-orgbac-multitenancy/SKILL.md) |
 | Aidbox Python App operations | [aidbox-python-app-operation](skills/aidbox-python-app-operation/SKILL.md) |
 | Python Aidbox app conventions | [aidbox-python-conventions](skills/aidbox-python-conventions/SKILL.md) |
@@ -71,15 +69,16 @@ Step-by-step usage guide with worked examples: [skills/README.md](skills/README.
 
 ```
 fhir-emr-questionnaire ──┐
-                         ├──► beda-sdc-forms ──► aidbox-orgbac-multitenancy
-fhir-emr-mapping ────────┘
-fhir-emr-frontend
-                              aidbox-python-app-operation ──► aidbox-orgbac-multitenancy
-                              aidbox-python-conventions
+fhir-emr-mapping ────────┼──► fhirpath  (FHIRPath expression language — shared by all)
+fhir-emr-frontend ───────┤
+aidbox-python-conventions┘
+
+fhir-emr-questionnaire / fhir-emr-mapping ──► aidbox-orgbac-multitenancy  (org-scoped extraction)
+aidbox-python-app-operation ──────────────► aidbox-orgbac-multitenancy
 ```
 
 - **Questionnaire + Mapping** skills cover YAML authoring rules (including Quick Do/Don't checklists).
-- **beda-sdc-forms** covers the runtime pipeline that consumes those YAML files.
+- **fhirpath** covers the FHIRPath expression language shared by Questionnaire, Mapping, frontend, and backend — it is NOT FPML (the Mapping templating language, which lives in `fhir-emr-mapping`).
 - **fhir-emr-frontend** covers React/TypeScript conventions specific to this EMR repo.
 - **aidbox-orgbac-multitenancy** is needed when forms or operations run org-scoped.
 - **aidbox-python-app-operation** and **aidbox-python-conventions** apply to Aidbox Python apps.

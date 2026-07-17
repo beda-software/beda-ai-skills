@@ -21,6 +21,9 @@ Conditionals/loops are allowed only as:
 1. **Don't:** Put FPML `{% if %}` / `{% for %}` as sibling keys next to real fields in an object.
 2. **Do:** In FPML arrays, place conditionals/loops as array element keys.
 3. **Do:** For same-Bundle references, use URN templates (`urn:uuid:...`), not plain `"Encounter/..."` references.
+4. **Do:** Read a scalar answer with the `%QuestionnaireResponse.answers('linkId')` shortcut. Use `%QuestionnaireResponse.repeat(item).where(linkId='...')` when you need the item node itself (repeating group rows), not the shortcut. See [REFERENCE.md](REFERENCE.md#6-reading-answers).
+5. **Do:** Reference the source **only** as `%QuestionnaireResponse` — the `%resource` alias (used in Questionnaires) and bare resource-type roots (used on the frontend/backend) do not apply in FPML.
+6. **Don't:** Read launch-context variables (`%Patient`, `%Author`, `%Encounter`, …) inside a Mapping. If extraction needs launch-context data, capture it as **hidden items** in the Questionnaire (populated via `initialExpression`) and read those answers from `%QuestionnaireResponse`. See [REFERENCE.md](REFERENCE.md#6-reading-answers).
 
 ## Quick decision table
 
@@ -70,5 +73,5 @@ reference: "{{ 'urn:uuid:Encounter-0' }}"
 ## Related skills
 
 - Questionnaire that feeds the mapping: [fhir-emr-questionnaire](../fhir-emr-questionnaire/SKILL.md)
-- `$extract` pipeline and transaction URL rules: [beda-sdc-forms](../beda-sdc-forms/SKILL.md)
+- FHIRPath expressions embedded in templates (not FPML itself): [fhirpath](../fhirpath/SKILL.md)
 - Org-scoped extraction authorization: [aidbox-orgbac-multitenancy](../aidbox-orgbac-multitenancy/SKILL.md)

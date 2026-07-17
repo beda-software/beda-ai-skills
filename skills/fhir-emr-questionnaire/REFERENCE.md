@@ -42,17 +42,18 @@ Examples:
 ### Frontend-evaluated expressions
 
 For `calculatedExpression`, `enableWhenExpression`, `variable`:
-- `%resource` = current QuestionnaireResponse
-- `%questionnaire` = Questionnaire definition
+- `%resource` = current QuestionnaireResponse (preferred)
+- `%questionnaire` = Questionnaire definition (preferred)
 - `%qitem` = current Questionnaire item
 - `%context` = current repeat row context
+- `%QuestionnaireResponse` / `%Questionnaire` are also supported (same as on the backend), but the lowercase `%resource` / `%questionnaire` are the **preferred** names.
 
 ### Backend-evaluated expressions
 
 For `initialExpression`, `itemConstraint`:
-- Use `%Questionnaire` and `%QuestionnaireResponse`
-- Do not rely on `%questionnaire` (lowercase)
-- Do not rely on Questionnaire-defined `%VarName` variables
+- `%QuestionnaireResponse` and `%Questionnaire` are the original names and remain supported.
+- `%resource` / `%questionnaire` are also supported on newer server versions and are the **preferred** names going forward — check your Aidbox/SDC version before relying on them.
+- Questionnaire-defined `%VarName` variables are supported here too (not frontend-only).
 
 ## 5) Compatibility notes (important)
 

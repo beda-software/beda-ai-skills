@@ -21,7 +21,7 @@ Baseline example: `resources/init-seeds/Questionnaire/example.yaml`
 3. **Do:** Use specific answer types (`valueString`, `valueCoding`, etc.), not generic `.answer.value`.
 4. **Do:** Use `.first()` / `.single()` when a singleton value is required.
 5. **Do:** Keep `initialExpression` for backend prefill and `calculatedExpression` for frontend recalculation.
-6. **Don't:** Use Questionnaire variables in backend-evaluated expressions (`initialExpression`, `itemConstraint`).
+6. **Do:** Prefer `%resource` (QuestionnaireResponse) and `%questionnaire` (Questionnaire); the `%QuestionnaireResponse` / `%Questionnaire` names are also supported but the lowercase ones are preferred.
 7. **Don't:** Assume `_text.cqfExpression` behaves the same across all renderers.
 
 ## Core extensions
@@ -31,11 +31,16 @@ Baseline example: `resources/init-seeds/Questionnaire/example.yaml`
 | `calculatedExpression` | Frontend | `%resource`, `%questionnaire`, `%qitem`, `%context` |
 | `enableWhenExpression` | Frontend | same |
 | `variable` | Frontend | same |
-| `initialExpression` | Backend | `%Questionnaire`, `%QuestionnaireResponse` |
-| `itemConstraint` | Backend | `%Questionnaire`, `%QuestionnaireResponse` |
-| `_text.cqfExpression` | Frontend (renderer-dependent) | same |
+| `initialExpression` | Backend | `%resource` / `%questionnaire` (newer) or `%QuestionnaireResponse` / `%Questionnaire` (legacy) |
+| `itemConstraint` | Backend | same |
+| `_text.cqfExpression` | Frontend (renderer-dependent) | same as frontend |
 
-**Do not** use Questionnaire-defined `%VarName` variables in backend expressions (`initialExpression`, `itemConstraint`).
+**Context variable naming.** Prefer `%resource` (the QuestionnaireResponse) and `%questionnaire` (the Questionnaire) everywhere:
+
+- **Frontend:** `%resource` / `%questionnaire` are preferred; `%QuestionnaireResponse` / `%Questionnaire` are also supported (same as on the backend).
+- **Backend:** `%QuestionnaireResponse` / `%Questionnaire` are the original names; newer server versions also support `%resource` / `%questionnaire`, which are preferred going forward.
+
+Questionnaire-defined `%VarName` variables work in both frontend- and backend-evaluated expressions.
 
 ## FHIRPath essentials
 
@@ -65,6 +70,19 @@ iif(%context.answer.exists(), %context.answer.valueDateTime, now())
   .valueDecimal.sum()
 ```
 
+**Expose launch context for extraction (hidden field):** a Mapping reads only `%QuestionnaireResponse`, never launch-context variables. When extraction needs launch-context data, capture it in a hidden item so it lands in the QuestionnaireResponse:
+
+```yaml
+- linkId: patientId
+  type: string
+  hidden: true
+  initialExpression:
+    language: text/fhirpath
+    expression: "%Patient.id"
+```
+
+The Mapping then reads `%QuestionnaireResponse.answers('patientId')`. See [fhir-emr-mapping](../fhir-emr-mapping/SKILL.md).
+
 ## Compatibility notes
 
 - Calculated `choice/Coding` values may be renderer-specific; prefer readOnly `string` + `calculatedExpression` for portability.
@@ -72,6 +90,6 @@ iif(%context.answer.exists(), %context.answer.valueDateTime, now())
 
 ## Related skills
 
-- Runtime form pipeline: [beda-sdc-forms](../beda-sdc-forms/SKILL.md)
+- FHIRPath expression language (used in all expression fields): [fhirpath](../fhirpath/SKILL.md)
 - Extraction from questionnaire responses: [fhir-emr-mapping](../fhir-emr-mapping/SKILL.md)
 - Org-scoped form operations: [aidbox-orgbac-multitenancy](../aidbox-orgbac-multitenancy/SKILL.md)

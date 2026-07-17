@@ -78,11 +78,11 @@ subject:
 
 ```bash
 # 1. Check all skill files have YAML frontmatter
-grep -L '^---$' skills/*/SKILL.md && echo "missing frontmatter" || echo "frontmatter OK"
+grep -L '^---$' beda-ai-skills/skills/*/SKILL.md && echo "missing frontmatter" || echo "frontmatter OK"
 
 # 2. Copy one skill into Cursor (project scope)
 mkdir -p .cursor/skills
-cp -r skills/fhir-emr-mapping .cursor/skills/
+cp -r beda-ai-skills/skills/fhir-emr-mapping .cursor/skills/
 
 # 3. Confirm REFERENCE link resolves after copy
 test -f .cursor/skills/fhir-emr-mapping/REFERENCE.md && echo "self-contained OK"
