@@ -1,16 +1,16 @@
 ---
 name: fhir-emr-questionnaire
-description: Author and debug FHIR Questionnaire YAML in Beda EMR — FCE extensions (calculatedExpression, enableWhenExpression, initialExpression, itemConstraint, variables), FHIRPath answer lookup, scoring patterns, and group-table summation. Use when creating or editing resources/**/Questionnaire/*.yaml, debugging form visibility or calculated fields, or writing FHIRPath for SDC questionnaires.
+description: Author and debug FHIR Questionnaire YAML in Beda EMR — FCE extensions (calculatedExpression, enableWhenExpression, initialExpression, itemConstraint, variables), FHIRPath answer lookup, scoring patterns, and group-table summation. Use when creating or editing resources/**/Questionnaire/**/*.yaml, debugging form visibility or calculated fields, or writing FHIRPath for SDC questionnaires.
 ---
 
 # FHIR EMR Questionnaire authoring
 
 Full guide: [REFERENCE.md](REFERENCE.md)
-Baseline example: `resources/init-seeds/Questionnaire/example.yaml`
+Applies to any `resources/**/Questionnaire/**/*.yaml`.
 
 ## Before you start
 
-1. Read the baseline example above.
+1. Read an existing questionnaire under `resources/**/Questionnaire/**/*.yaml` for reference.
 2. Use profile `https://emr-core.beda.software/StructureDefinition/fhir-emr-questionnaire`.
 3. Keep item field order: `linkId` → `text` → `type`, then other keys.
 

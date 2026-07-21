@@ -52,7 +52,7 @@ The same flow applies in Claude Code — skills installed in `.claude/skills/` a
 
 ## Step 3 — when you want control
 
-- **Force a skill:** name it in the prompt — *"Using the fhir-emr-mapping skill, review resources/init-seeds/Mapping/extract-vital-signs.yaml"*.
+- **Force a skill:** name it in the prompt — *"Using the fhir-emr-mapping skill, review this `resources/**/Mapping/**/*.yaml` file"*.
 - **Check it loaded:** the agent references skill rules in its answer (e.g. cites the golden rule); if unsure, ask *"which skill did you use?"*.
 - **Go deeper yourself:** open the skill's `REFERENCE.md` — it's the full human-readable guide behind the short `SKILL.md`.
 
@@ -72,5 +72,3 @@ The skills are plain markdown, so they work anywhere:
 2. Keep `SKILL.md` short and focused; move deep detail to `REFERENCE.md` **inside the same folder** — skills must stay self-contained when copied.
 3. Add the skill to the catalog in [AGENTS.md](../AGENTS.md).
 4. Test: copy to `.cursor/skills/` (or `.claude/skills/`), ask a matching question, and verify the agent applies the skill's rules.
-
-See also: [ai-tools-experience.md](../ai-tools-experience.md) for general AI tooling practices.

@@ -71,4 +71,3 @@ Point the agent at the right guide for the task:
 | Mapping YAML | [skills/fhir-emr-mapping](skills/fhir-emr-mapping/SKILL.md) |
 | FHIRPath expressions (all layers) | [skills/fhirpath](skills/fhirpath/SKILL.md) |
 | OrgBAC / multi-tenancy | [skills/aidbox-orgbac-multitenancy](skills/aidbox-orgbac-multitenancy/SKILL.md) |
-| AI tool usage | [ai-tools-experience.md](ai-tools-experience.md) |

@@ -1,6 +1,6 @@
 # FHIR Questionnaire authoring — reference
 
-Deep detail behind [SKILL.md](SKILL.md). Use this document when editing `resources/**/Questionnaire/*.yaml`.
+Deep detail behind [SKILL.md](SKILL.md). Use this document when editing `resources/**/Questionnaire/**/*.yaml`.
 
 ## 1) Structure and style
 

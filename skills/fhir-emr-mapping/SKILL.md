@@ -1,12 +1,12 @@
 ---
 name: fhir-emr-mapping
-description: Author and debug FPML extraction Mappings in Beda EMR — the golden rule for {% if %}/{% for %} placement, array vs scalar fields, {% assign %} loops, coding assignment, and in-bundle URN references. Use when creating or editing resources/**/Mapping/*.yaml, debugging $extract output, or writing FHIRPath in mapping templates.
+description: Author and debug FPML extraction Mappings in Beda EMR — the golden rule for {% if %}/{% for %} placement, array vs scalar fields, {% assign %} loops, {% merge %} for multiple conditionals in one object, coding assignment, and in-bundle URN references. Use when creating or editing resources/**/Mapping/**/*.yaml, debugging $extract output, or writing FHIRPath in mapping templates.
 ---
 
 # FHIR EMR Mapping (FPML)
 
 Full guide: [REFERENCE.md](REFERENCE.md)
-Baseline example: `resources/init-seeds/Mapping/mapping-baseline.yaml`
+Applies to any `resources/**/Mapping/**/*.yaml`.
 
 ## Golden rule
 
@@ -24,6 +24,7 @@ Conditionals/loops are allowed only as:
 4. **Do:** Read a scalar answer with the `%QuestionnaireResponse.answers('linkId')` shortcut. Use `%QuestionnaireResponse.repeat(item).where(linkId='...')` when you need the item node itself (repeating group rows), not the shortcut. See [REFERENCE.md](REFERENCE.md#6-reading-answers).
 5. **Do:** Reference the source **only** as `%QuestionnaireResponse` — the `%resource` alias (used in Questionnaires) and bare resource-type roots (used on the frontend/backend) do not apply in FPML.
 6. **Don't:** Read launch-context variables (`%Patient`, `%Author`, `%Encounter`, …) inside a Mapping. If extraction needs launch-context data, capture it as **hidden items** in the Questionnaire (populated via `initialExpression`) and read those answers from `%QuestionnaireResponse`. See [REFERENCE.md](REFERENCE.md#6-reading-answers).
+7. **Do:** When one object needs **several independent `{% if %}` fragments**, wrap them in a single `{% merge %}` list (each element is an `{% if %}` producing a partial object). This is the sanctioned way around the golden rule's "no multiple sibling conditionals". See [REFERENCE.md](REFERENCE.md#7-multiple-conditionals-in-one-object).
 
 ## Quick decision table
 
@@ -57,6 +58,23 @@ entry:
         - rowId: "{{ %row.item.where(linkId='id').answer.valueString }}"
       resource:
         id: "{{ %rowId }}"
+```
+
+**Multiple conditionals in one object (`{% merge %}`):**
+```yaml
+resource:
+  resourceType: Observation
+  status: final
+  valueQuantity:
+    value: "{{ %bodyTemperature }}"
+  "{% merge %}":
+    - "{% if %tempSeverity.exists() %}":
+        note:
+          - text: "Derived severity: {{ %tempSeverity }}"
+    - "{% if %methodCoding.exists() %}":
+        method:
+          coding:
+            - "{{ %methodCoding }}"
 ```
 
 **Coding assignment** (expression returns full Coding):

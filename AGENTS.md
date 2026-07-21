@@ -8,7 +8,6 @@ Central index for AI-assisted development in the Beda FHIR EMR ecosystem. Use th
 | --- | --- | --- |
 | **Index** | `beda-ai-skills/AGENTS.md` (this file) | Navigation |
 | **Skills** | `beda-ai-skills/skills/` | Self-contained domain guides (SKILL.md + REFERENCE.md), auto-discoverable by Cursor |
-| **AI workflow** | `beda-ai-skills/ai-tools-experience.md` | How the team uses Claude, Cursor, and related tools |
 | **Examples** | `beda-ai-skills/agents.example.md` | Template for project-specific agent overlays |
 
 Each skill is a self-contained folder: `SKILL.md` (entry point, loaded by the agent) plus `REFERENCE.md` (full guide).
@@ -50,20 +49,19 @@ Step-by-step usage guide with worked examples: [skills/README.md](skills/README.
 
 | You are working on | Skill |
 | --- | --- |
-| `resources/**/Questionnaire/*.yaml` | [fhir-emr-questionnaire](skills/fhir-emr-questionnaire/SKILL.md) |
-| `resources/**/Mapping/*.yaml` | [fhir-emr-mapping](skills/fhir-emr-mapping/SKILL.md) |
+| `resources/**/Questionnaire/**/*.yaml` | [fhir-emr-questionnaire](skills/fhir-emr-questionnaire/SKILL.md) |
+| `resources/**/Mapping/**/*.yaml` | [fhir-emr-mapping](skills/fhir-emr-mapping/SKILL.md) |
 | FHIRPath expressions (Questionnaire, Mapping, frontend TS, backend) | [fhirpath](skills/fhirpath/SKILL.md) |
 | OrgBAC, multi-tenancy, AccessPolicy | [aidbox-orgbac-multitenancy](skills/aidbox-orgbac-multitenancy/SKILL.md) |
 | Aidbox Python App operations | [aidbox-python-app-operation](skills/aidbox-python-app-operation/SKILL.md) |
 | Python Aidbox app conventions | [aidbox-python-conventions](skills/aidbox-python-conventions/SKILL.md) |
 | React / TypeScript UI (`src/`) | [fhir-emr-frontend](skills/fhir-emr-frontend/SKILL.md) |
 | i18n / locale strings | [translate](skills/translate/SKILL.md) |
-| Choosing or configuring AI tools | [ai-tools-experience.md](ai-tools-experience.md) |
 
-### Baseline examples
+### Where these skills apply
 
-- Questionnaire: `resources/init-seeds/Questionnaire/example.yaml`
-- Mapping: `resources/init-seeds/Mapping/mapping-baseline.yaml`
+- Questionnaire YAML: any `resources/**/Questionnaire/**/*.yaml`
+- Mapping YAML: any `resources/**/Mapping/**/*.yaml`
 
 ### Skill relationships
 
@@ -87,7 +85,7 @@ aidbox-python-app-operation ──────────────► aidbox
 
 ## AI workflow essentials
 
-Before any non-trivial task, read [ai-tools-experience.md](ai-tools-experience.md). Key team practices:
+Key team practices:
 
 - **Plan mode first** — review scope before implementation (Claude Code and Cursor).
 - **Small, focused tasks** — one well-defined change per agent request.

@@ -1,6 +1,6 @@
 # FPML mapping rules — reference
 
-Deep detail behind [SKILL.md](SKILL.md). Use this document when editing `resources/**/Mapping/*.yaml`.
+Deep detail behind [SKILL.md](SKILL.md). Use this document when editing `resources/**/Mapping/**/*.yaml`.
 
 ## Quick Navigation (Mapping)
 
@@ -11,6 +11,7 @@ Deep detail behind [SKILL.md](SKILL.md). Use this document when editing `resourc
 - **If expression already returns Coding:** read **4) Coding assignment**.
 - **If linking resources in same Bundle:** read **5) In-bundle references**.
 - **If reading answers from the QuestionnaireResponse:** read **6) Reading answers**.
+- **If one object needs several independent `{% if %}` fragments:** read **7) Multiple conditionals in one object**.
 
 ## Golden rule
 
@@ -161,3 +162,46 @@ If extraction needs a value that comes from launch context (e.g. the patient id,
 ```
 
 See [fhir-emr-questionnaire](../fhir-emr-questionnaire/SKILL.md) for hidden-field authoring.
+
+## 7) Multiple conditionals in one object
+
+The golden rule forbids multiple `{% if %}` sibling keys in one object. But an object with real fields sometimes also needs **several independent optional fragments**. Put them under a single `{% merge %}` key whose value is a **list** of `{% if %}` blocks; each block produces a partial object and all of them are merged into the parent object next to its real fields.
+
+### GOOD
+
+```yaml
+resource:
+  resourceType: Observation
+  status: final
+  code:
+    coding:
+      - system: http://loinc.org
+        code: "8310-5"
+  valueQuantity:
+    value: "{{ %bodyTemperature }}"
+  "{% merge %}":
+    - "{% if %tempSeverity.exists() and %tempSeverity != '' %}":
+        note:
+          - text: "Derived severity: {{ %tempSeverity }}"
+    - "{% if %methodCoding.exists() %}":
+        method:
+          coding:
+            - "{{ %methodCoding }}"
+```
+
+### BAD (multiple `{% if %}` as sibling keys — violates the golden rule)
+
+```yaml
+resource:
+  resourceType: Observation
+  status: final
+  "{% if %tempSeverity.exists() %}":
+    note:
+      - text: "Derived severity: {{ %tempSeverity }}"
+  "{% if %methodCoding.exists() %}":
+    method:
+      coding:
+        - "{{ %methodCoding }}"
+```
+
+A single conditional key wrapping one scalar/object value (section 2) is fine on its own — reach for `{% merge %}` only when **two or more** conditional fragments must coexist in the same object.
