@@ -32,6 +32,7 @@ Conditionals/loops are allowed only as:
 | --- | --- |
 | Array (list) | As an array element key: `- "{% for item in %items %}":` |
 | Scalar / single object | As the key wrapping the value: `start: "{% if %x.exists() %}": "{{ %x }}"` |
+| Several conditionals in one object | Under one `{% merge %}` key holding a list of `{% if %}` blocks (see Patterns / [REFERENCE.md](REFERENCE.md#7-multiple-conditionals-in-one-object)) |
 
 ## Patterns
 

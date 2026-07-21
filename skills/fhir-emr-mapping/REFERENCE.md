@@ -180,7 +180,7 @@ resource:
   valueQuantity:
     value: "{{ %bodyTemperature }}"
   "{% merge %}":
-    - "{% if %tempSeverity.exists() and %tempSeverity != '' %}":
+    - "{% if %tempSeverity.exists() %}":
         note:
           - text: "Derived severity: {{ %tempSeverity }}"
     - "{% if %methodCoding.exists() %}":

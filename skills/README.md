@@ -52,7 +52,7 @@ The same flow applies in Claude Code — skills installed in `.claude/skills/` a
 
 ## Step 3 — when you want control
 
-- **Force a skill:** name it in the prompt — *"Using the fhir-emr-mapping skill, review this `resources/**/Mapping/**/*.yaml` file"*.
+- **Force a skill:** name it in the prompt — *"Using the fhir-emr-mapping skill, review a `resources/**/Mapping/**/*.yaml` file"*.
 - **Check it loaded:** the agent references skill rules in its answer (e.g. cites the golden rule); if unsure, ask *"which skill did you use?"*.
 - **Go deeper yourself:** open the skill's `REFERENCE.md` — it's the full human-readable guide behind the short `SKILL.md`.
 

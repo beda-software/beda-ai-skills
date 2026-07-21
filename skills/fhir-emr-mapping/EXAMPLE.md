@@ -73,3 +73,7 @@ subject:
       - conditionCoding: "{{ %conditionRow.item.where(linkId='condition').answer.valueCoding }}"
       - conditionId: "{{ %conditionRow.item.where(linkId='condition-id').answer.valueString }}"
 ```
+
+---
+
+Every rule above is satisfied by the baseline file, showing the skill's guidance matches real mappings in the repo. For the full rule set (including `{% merge %}` and reading answers), see [REFERENCE.md](REFERENCE.md).
