@@ -8,51 +8,30 @@ Team AI skills and authoring guides for the Beda FHIR EMR ecosystem. Works with 
 
 You need GitLab access to `emr/beda-ai-skills` (SSH key or HTTPS credentials).
 
-**1. Clone the repo (once):**
-
-```bash
-git clone git@gitlab.beda.software:emr/beda-ai-skills.git
-cd beda-ai-skills
-```
-
-HTTPS alternative:
-
-```bash
-git clone https://gitlab.beda.software/emr/beda-ai-skills.git
-cd beda-ai-skills
-```
-
-**2. Run the install script from the project where you want the skills** (or pass `--global`):
-
-```bash
-# Cursor — current project → .cursor/skills
-./install.sh
-
-# Claude Code — current project → .claude/skills
-./install.sh --claude
-
-# Cursor — all projects → ~/.cursor/skills
-./install.sh --global
-
-# Claude Code — all projects → ~/.claude/skills
-./install.sh --claude --global
-```
-
-Typical flow when your shell is already inside a product repo (e.g. `fhir-emr`):
+**1. Clone once** into any convenient folder:
 
 ```bash
 git clone git@gitlab.beda.software:emr/beda-ai-skills.git ~/beda-ai-skills
-~/beda-ai-skills/install.sh
 ```
 
-Options: `--cursor` (default), `--claude`, `--global`, `--target /path/to/skills`.
+HTTPS: `git clone https://gitlab.beda.software/emr/beda-ai-skills.git ~/beda-ai-skills`
 
-**Updates:** after skills change upstream:
+**2. Install into a project** (or globally) — run from anywhere:
 
 ```bash
-cd ~/beda-ai-skills   # or wherever you cloned
-git pull
-./install.sh          # re-run with the same flags you used before
+~/beda-ai-skills/install.sh ~/work/fhir-emr                 # Cursor → project/.cursor/skills
+~/beda-ai-skills/install.sh --claude ~/work/fhir-emr        # Claude Code → project/.claude/skills
+~/beda-ai-skills/install.sh --global                        # Cursor → ~/.cursor/skills (all projects)
+~/beda-ai-skills/install.sh --claude --global
+```
+
+Options: `--cursor` (default), `--claude`, `--global`, `--project /path`, `--target /path/to/skills`.
+
+**Updates:**
+
+```bash
+cd ~/beda-ai-skills && git pull
+~/beda-ai-skills/install.sh ~/work/fhir-emr    # same args as before
 ```
 
 After install, restart the IDE or start a new agent session. Skills load automatically by task — or invoke manually (`/fhir-emr-mapping` in Cursor).

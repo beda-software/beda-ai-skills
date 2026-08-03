@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
 # Install beda-ai-skills into Cursor or Claude Code.
 #
-# Usage:
-#   git clone git@gitlab.beda.software:emr/beda-ai-skills.git
-#   cd beda-ai-skills && ./install.sh
-#
-# Examples:
-#   ./install.sh                      # Cursor, project scope (.cursor/skills)
-#   ./install.sh --claude             # Claude Code, project scope
-#   ./install.sh --global             # Cursor, personal scope (~/.cursor/skills)
-#   ./install.sh --claude --global    # Claude Code, personal scope
-#   ./install.sh --target /path/to/skills
+# Usage (run from anywhere after cloning this repo once):
+#   git clone git@gitlab.beda.software:emr/beda-ai-skills.git ~/beda-ai-skills
+#   ~/beda-ai-skills/install.sh ~/work/fhir-emr              # → project/.cursor/skills
+#   ~/beda-ai-skills/install.sh --claude ~/work/fhir-emr     # → project/.claude/skills
+#   ~/beda-ai-skills/install.sh --global                     # → ~/.cursor/skills
+#   ~/beda-ai-skills/install.sh --claude --global            # → ~/.claude/skills
+#   ~/beda-ai-skills/install.sh --target /path/to/skills
 
 set -euo pipefail
 
@@ -18,11 +15,12 @@ REPO_URL="${BEDA_AI_SKILLS_REPO:-git@gitlab.beda.software:emr/beda-ai-skills.git
 REF="${BEDA_AI_SKILLS_REF:-main}"
 TOOL="cursor"
 SCOPE="project"
+PROJECT=""
 TARGET=""
 TMPDIR=""
 
 usage() {
-  sed -n '2,12p' "$0" | tail -n +2
+  sed -n '2,11p' "$0" | tail -n +2
   exit "${1:-0}"
 }
 
@@ -31,20 +29,57 @@ while [[ $# -gt 0 ]]; do
     --cursor) TOOL="cursor"; shift ;;
     --claude) TOOL="claude"; shift ;;
     --global) SCOPE="global"; shift ;;
+    --project)
+      PROJECT="${2:?--project requires a path}"
+      shift 2
+      ;;
     --target)
       TARGET="${2:?--target requires a path}"
       shift 2
       ;;
     -h|--help) usage 0 ;;
-    *) echo "Unknown option: $1" >&2; usage 1 ;;
+    -*)
+      echo "Unknown option: $1" >&2
+      usage 1
+      ;;
+    *)
+      if [[ -n "$PROJECT" ]]; then
+        echo "Only one project path allowed (got '$PROJECT' and '$1')" >&2
+        usage 1
+      fi
+      PROJECT="$1"
+      shift
+      ;;
   esac
 done
 
 if [[ -z "$TARGET" ]]; then
-  if [[ "$TOOL" == "claude" ]]; then
-    [[ "$SCOPE" == "global" ]] && TARGET="$HOME/.claude/skills" || TARGET=".claude/skills"
+  if [[ "$SCOPE" == "global" ]]; then
+    if [[ -n "$PROJECT" ]]; then
+      echo "Do not pass a project path together with --global" >&2
+      usage 1
+    fi
+    if [[ "$TOOL" == "claude" ]]; then
+      TARGET="$HOME/.claude/skills"
+    else
+      TARGET="$HOME/.cursor/skills"
+    fi
   else
-    [[ "$SCOPE" == "global" ]] && TARGET="$HOME/.cursor/skills" || TARGET=".cursor/skills"
+    if [[ -z "$PROJECT" ]]; then
+      echo "Pass a project path, or use --global." >&2
+      echo "Example: $0 ~/work/fhir-emr" >&2
+      usage 1
+    fi
+    if [[ ! -d "$PROJECT" ]]; then
+      echo "Project directory not found: $PROJECT" >&2
+      exit 1
+    fi
+    PROJECT="$(cd "$PROJECT" && pwd)"
+    if [[ "$TOOL" == "claude" ]]; then
+      TARGET="$PROJECT/.claude/skills"
+    else
+      TARGET="$PROJECT/.cursor/skills"
+    fi
   fi
 fi
 
