@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Install beda-ai-skills into Cursor or Claude Code.
 #
-# One-liner (public repo):
-#   curl -fsSL https://gitlab.beda.software/emr/beda-ai-skills/-/raw/main/install.sh | bash
+# Usage:
+#   git clone git@gitlab.beda.software:emr/beda-ai-skills.git
+#   cd beda-ai-skills && ./install.sh
 #
 # Examples:
-#   ./install.sh                    # Cursor, project scope (.cursor/skills)
+#   ./install.sh                      # Cursor, project scope (.cursor/skills)
 #   ./install.sh --claude             # Claude Code, project scope
 #   ./install.sh --global             # Cursor, personal scope (~/.cursor/skills)
 #   ./install.sh --claude --global    # Claude Code, personal scope

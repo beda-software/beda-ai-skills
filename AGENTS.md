@@ -21,10 +21,14 @@ The `SKILL.md` format is the standard Anthropic Agent Skills spec — the same f
 **One-time setup:**
 
 ```bash
-curl -fsSL https://gitlab.beda.software/emr/beda-ai-skills/-/raw/main/install.sh | bash
+git clone git@gitlab.beda.software:emr/beda-ai-skills.git
+cd beda-ai-skills
+./install.sh                 # Cursor, current project
+./install.sh --claude        # Claude Code
+./install.sh --global        # Cursor, all projects (~/.cursor/skills)
 ```
 
-Or from a local clone: `cd beda-ai-skills && ./install.sh` (Cursor) / `./install.sh --claude` (Claude Code).
+Full install notes (HTTPS, updates, paths): [README.md](README.md).
 
 **Then just work normally.** You don't "call" a skill — the agent reads each skill's `description` and loads it automatically when your request matches. For example:
 

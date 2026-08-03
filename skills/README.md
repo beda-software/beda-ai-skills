@@ -12,23 +12,22 @@ A skill is a set of instructions the AI agent loads **on demand**. The YAML fron
 
 The `SKILL.md` format is the standard [Anthropic Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills) spec — the same folders work in both Cursor and Claude Code.
 
-**One command (recommended):**
+Clone the repo (GitLab access required), then run `install.sh`:
 
 ```bash
-curl -fsSL https://gitlab.beda.software/emr/beda-ai-skills/-/raw/main/install.sh | bash
-```
+git clone git@gitlab.beda.software:emr/beda-ai-skills.git
+cd beda-ai-skills
 
-Claude Code: add `| bash -s -- --claude`. Personal scope (all projects): add `| bash -s -- --global`.
-
-**Manual install** — if you already have the repo:
-
-```bash
-./install.sh                              # Cursor, project scope
+./install.sh                              # Cursor, project scope (.cursor/skills)
+./install.sh --claude                     # Claude Code, project scope
+./install.sh --global                     # Cursor, personal scope (~/.cursor/skills)
 ./install.sh --claude --global            # Claude Code, personal scope
-mkdir -p .cursor/skills && cp -r skills/* .cursor/skills/   # copy without script
+
+# Or copy without the script:
+mkdir -p .cursor/skills && cp -r skills/* .cursor/skills/
 ```
 
-Both tools discover skills the same way and load them automatically by `description`. After a `git pull` that changes skills, re-run `./install.sh`.
+Both tools discover skills the same way and load them automatically by `description`. After a `git pull` that changes skills, re-run `./install.sh` with the same flags.
 
 **Cross-skill links** (e.g. `fhir-emr-questionnaire` → `fhirpath`) resolve only when the related skills are copied together, which is why copying all of them at once is recommended.
 
