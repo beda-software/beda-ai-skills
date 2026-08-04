@@ -3,10 +3,10 @@
 #
 # Usage (run from anywhere after cloning this repo once):
 #   git clone git@gitlab.beda.software:emr/beda-ai-skills.git ~/beda-ai-skills
-#   ~/beda-ai-skills/install.sh ~/work/fhir-emr              # → project/.cursor/skills
-#   ~/beda-ai-skills/install.sh --claude ~/work/fhir-emr     # → project/.claude/skills
-#   ~/beda-ai-skills/install.sh --global                     # → ~/.cursor/skills
+#   ~/beda-ai-skills/install.sh --global                     # → ~/.cursor/skills (recommended)
 #   ~/beda-ai-skills/install.sh --claude --global            # → ~/.claude/skills
+#   ~/beda-ai-skills/install.sh ~/work/fhir-emr              # → project/.cursor/skills (optional)
+#   ~/beda-ai-skills/install.sh --claude ~/work/fhir-emr     # → project/.claude/skills
 #   ~/beda-ai-skills/install.sh --target /path/to/skills
 
 set -euo pipefail

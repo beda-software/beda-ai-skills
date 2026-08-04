@@ -16,13 +16,18 @@ git clone git@gitlab.beda.software:emr/beda-ai-skills.git ~/beda-ai-skills
 
 HTTPS: `git clone https://gitlab.beda.software/emr/beda-ai-skills.git ~/beda-ai-skills`
 
-**2. Install into a project** (or globally) — run from anywhere:
+**2. Install globally** (recommended) — skills become available in all projects:
+
+```bash
+~/beda-ai-skills/install.sh --global                 # Cursor → ~/.cursor/skills
+~/beda-ai-skills/install.sh --claude --global        # Claude Code → ~/.claude/skills
+```
+
+**Optional: install into a single project only:**
 
 ```bash
 ~/beda-ai-skills/install.sh ~/work/fhir-emr                 # Cursor → project/.cursor/skills
 ~/beda-ai-skills/install.sh --claude ~/work/fhir-emr        # Claude Code → project/.claude/skills
-~/beda-ai-skills/install.sh --global                        # Cursor → ~/.cursor/skills (all projects)
-~/beda-ai-skills/install.sh --claude --global
 ```
 
 Options: `--cursor` (default), `--claude`, `--global`, `--project /path`, `--target /path/to/skills`.
@@ -31,7 +36,7 @@ Options: `--cursor` (default), `--claude`, `--global`, `--project /path`, `--tar
 
 ```bash
 cd ~/beda-ai-skills && git pull
-~/beda-ai-skills/install.sh ~/work/fhir-emr    # same args as before
+~/beda-ai-skills/install.sh --global    # same args as before
 ```
 
 After install, restart the IDE or start a new agent session. Skills load automatically by task — or invoke manually (`/fhir-emr-mapping` in Cursor).

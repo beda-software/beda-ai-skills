@@ -18,15 +18,14 @@ Each skill is a self-contained folder: `SKILL.md` (entry point, loaded by the ag
 
 The `SKILL.md` format is the standard Anthropic Agent Skills spec — the same folders work in **Cursor and Claude Code**.
 
-**One-time setup** — clone once, then point `install.sh` at the project (or use `--global`):
+**One-time setup** — clone once, then install globally (recommended):
 
 ```bash
 git clone git@gitlab.beda.software:emr/beda-ai-skills.git ~/beda-ai-skills
-~/beda-ai-skills/install.sh ~/work/fhir-emr     # → project/.cursor/skills
 ~/beda-ai-skills/install.sh --global            # → ~/.cursor/skills (all projects)
 ```
 
-Full install notes: [README.md](README.md).
+To install into a single project only: `~/beda-ai-skills/install.sh ~/work/fhir-emr`. Full notes: [README.md](README.md).
 
 **Then just work normally.** You don't "call" a skill — the agent reads each skill's `description` and loads it automatically when your request matches. For example:
 
