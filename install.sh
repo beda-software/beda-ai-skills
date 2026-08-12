@@ -2,7 +2,7 @@
 # Install beda-ai-skills into Cursor or Claude Code.
 #
 # Usage (run from anywhere after cloning this repo once):
-#   git clone git@gitlab.beda.software:emr/beda-ai-skills.git ~/beda-ai-skills
+#   git clone git@github.com:beda-software/beda-ai-skills.git ~/beda-ai-skills
 #   ~/beda-ai-skills/install.sh --global                     # → ~/.cursor/skills (recommended)
 #   ~/beda-ai-skills/install.sh --claude --global            # → ~/.claude/skills
 #   ~/beda-ai-skills/install.sh ~/work/fhir-emr              # → project/.cursor/skills (optional)
@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-REPO_URL="${BEDA_AI_SKILLS_REPO:-git@gitlab.beda.software:emr/beda-ai-skills.git}"
+REPO_URL="${BEDA_AI_SKILLS_REPO:-git@github.com:beda-software/beda-ai-skills.git}"
 REF="${BEDA_AI_SKILLS_REF:-main}"
 TOOL="cursor"
 SCOPE="project"

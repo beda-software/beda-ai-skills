@@ -15,7 +15,7 @@ The `SKILL.md` format is the standard [Anthropic Agent Skills](https://docs.clau
 Clone this repo once, then install globally (recommended):
 
 ```bash
-git clone git@gitlab.beda.software:emr/beda-ai-skills.git ~/beda-ai-skills
+git clone git@github.com:beda-software/beda-ai-skills.git ~/beda-ai-skills
 
 ~/beda-ai-skills/install.sh --global                        # Cursor → ~/.cursor/skills
 ~/beda-ai-skills/install.sh --claude --global               # Claude Code → ~/.claude/skills

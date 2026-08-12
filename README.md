@@ -6,15 +6,13 @@ Team AI skills and authoring guides for the Beda FHIR EMR ecosystem. Works with 
 
 ## Install
 
-You need GitLab access to `emr/beda-ai-skills` (SSH key or HTTPS credentials).
-
 **1. Clone once** into any convenient folder:
 
 ```bash
-git clone git@gitlab.beda.software:emr/beda-ai-skills.git ~/beda-ai-skills
+git clone git@github.com:beda-software/beda-ai-skills.git ~/beda-ai-skills
 ```
 
-HTTPS: `git clone https://gitlab.beda.software/emr/beda-ai-skills.git ~/beda-ai-skills`
+HTTPS: `git clone https://github.com/beda-software/beda-ai-skills.git ~/beda-ai-skills`
 
 **2. Install globally** (recommended) — skills become available in all projects:
 

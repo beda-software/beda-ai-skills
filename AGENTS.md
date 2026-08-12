@@ -21,7 +21,7 @@ The `SKILL.md` format is the standard Anthropic Agent Skills spec — the same f
 **One-time setup** — clone once, then install globally (recommended):
 
 ```bash
-git clone git@gitlab.beda.software:emr/beda-ai-skills.git ~/beda-ai-skills
+git clone git@github.com:beda-software/beda-ai-skills.git ~/beda-ai-skills
 ~/beda-ai-skills/install.sh --global            # → ~/.cursor/skills (all projects)
 ```
 
