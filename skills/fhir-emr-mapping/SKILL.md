@@ -20,7 +20,7 @@ Conditionals/loops are allowed only as:
 
 1. **Don't:** Put FPML `{% if %}` / `{% for %}` as sibling keys next to real fields in an object.
 2. **Do:** In FPML arrays, place conditionals/loops as array element keys.
-3. **Do:** For same-Bundle references, use URN templates (`urn:uuid:...`), not plain `"Encounter/..."` references.
+3. **Do:** For same-Bundle references, use URN templates (`urn:uuid:...`), not plain `"Encounter/..."` references. The creating entry's `fullUrl` is bare (`urn:uuid:Encounter-0`), but every `reference:` field pointing at it must be `{{ }}`-wrapped (`"{{ 'urn:uuid:Encounter-0' }}"`) — a bare `reference:` string fails Aidbox's Bundle-transaction resolution with "Referenced resource ... does not exist". See [REFERENCE.md](REFERENCE.md#5-in-bundle-references).
 4. **Do:** Read a scalar answer with the `%QuestionnaireResponse.answers('linkId')` shortcut. Use `%QuestionnaireResponse.repeat(item).where(linkId='...')` when you need the item node itself (repeating group rows), not the shortcut. See [REFERENCE.md](REFERENCE.md#6-reading-answers).
 5. **Do:** Reference the source **only** as `%QuestionnaireResponse` — the `%resource` alias (used in Questionnaires) and bare resource-type roots (used on the frontend/backend) do not apply in FPML.
 6. **Don't:** Read launch-context variables (`%Patient`, `%Author`, `%Encounter`, …) inside a Mapping. If extraction needs launch-context data, capture it as **hidden items** in the Questionnaire (populated via `initialExpression`) and read those answers from `%QuestionnaireResponse`. See [REFERENCE.md](REFERENCE.md#6-reading-answers).

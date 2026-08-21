@@ -120,6 +120,24 @@ reference: "{{ 'urn:uuid:Encounter-0' }}"
 
 Do not use plain external-style references (`"Encounter/..."`) for in-bundle links.
 
+**Pitfall: `fullUrl` is bare, `reference` is not.** The entry that *creates* the resource sets a bare, untemplated `fullUrl`:
+
+```yaml
+- fullUrl: urn:uuid:Encounter-0
+  request: { method: POST, url: /Encounter }
+  resource: { resourceType: Encounter, ... }
+```
+
+Any *other* entry that points at it must wrap the identical string in `{{ '...' }}`:
+
+```yaml
+  subject:
+    reference: "{{ 'urn:uuid:Encounter-0' }}"   # correct — {{ }}-wrapped
+  # reference: "urn:uuid:Encounter-0"           # WRONG — Aidbox rejects this at Bundle-validation
+  #                                               time with "Referenced resource urn:uuid:... does
+  #                                               not exist"
+```
+
 ## 6) Reading answers
 
 Read a **scalar** answer with the `answers('linkId')` shortcut inside a `{% assign %}` block:
