@@ -25,6 +25,9 @@ Conditionals/loops are allowed only as:
 5. **Do:** Reference the source **only** as `%QuestionnaireResponse` — the `%resource` alias (used in Questionnaires) and bare resource-type roots (used on the frontend/backend) do not apply in FPML.
 6. **Don't:** Read launch-context variables (`%Patient`, `%Author`, `%Encounter`, …) inside a Mapping. If extraction needs launch-context data, capture it as **hidden items** in the Questionnaire (populated via `initialExpression`) and read those answers from `%QuestionnaireResponse`. See [REFERENCE.md](REFERENCE.md#6-reading-answers).
 7. **Do:** When one object needs **several independent `{% if %}` fragments**, wrap them in a single `{% merge %}` list (each element is an `{% if %}` producing a partial object). This is the sanctioned way around the golden rule's "no multiple sibling conditionals". See [REFERENCE.md](REFERENCE.md#7-multiple-conditionals-in-one-object).
+8. **Don't:** Add `{% if %}` purely to stop a field/object from rendering as null/empty — FPML already prunes nulls and empty objects/arrays. Only guard for a real reason (a hardcoded non-null sibling literal, a present-but-not-really-there sentinel like `0`, or a function without documented empty-in/empty-out behavior). See [REFERENCE.md](REFERENCE.md#8-dont-guard-what-the-engine-already-prunes).
+9. **Don't:** Check `.trim() != ''` as an existence guard. Use `.exists()`. For joining optional parts into a display string, prefer union `|` + `.join(separator)` over `&`-concat-then-`.trim()`. See [REFERENCE.md](REFERENCE.md#9-trimming-and-blank-strings).
+10. **Do:** Reach for `{% assign %}` when a value is reused two or more times, or when a single-use expression is complex enough that naming it clarifies the body. **Don't** assign a value used once when the expression is already short/self-explanatory — inline it. See [REFERENCE.md](REFERENCE.md#10-assign--earns-its-place-by-reuse-or-by-readability--not-by-habit).
 
 ## Quick decision table
 
@@ -87,6 +90,12 @@ coding:
 **In-bundle reference** (same transaction Bundle):
 ```yaml
 reference: "{{ 'urn:uuid:Encounter-0' }}"
+```
+
+**No guard needed — engine prunes nulls/empty objects, and spec functions propagate empty:**
+```yaml
+numberOfRepeatsAllowed: "{{ %renewals.toInteger() }}"
+display: "{{ (%fname | %lname).join(' ') }}"
 ```
 
 ## Related skills
