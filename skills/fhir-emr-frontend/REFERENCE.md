@@ -111,17 +111,31 @@ The expression is parsed once at module load, call sites document source/result 
 ### FHIRPath vs plain TypeScript
 
 Deciding to use `compileAsFirst`/`compileAsArray` at all is a separate question from *how* to
-invoke FHIRPath once you've decided to. Scope FHIRPath deliberately:
+invoke FHIRPath once you've decided to. The test is **does this navigate a FHIR resource's
+array/optional-shaped structure at all** — not whether it has a `.where()` filter:
 
-- **Use FHIRPath** for genuine search/filter logic, type-filtering polymorphic collections
-  (`ofType()`, with the `fhirpath_r4_model` model from `'fhirpath/fhir-context/r4'`), or
-  cross-bundle/cross-reference lookups (e.g. finding the `Bundle.entry` matching a `Reference`).
-- **Use plain TypeScript** for trivial single-field reads or straightforward string construction
-  (e.g. building a `Reference` from a known `resourceType` and `id`) — don't convert these to
-  FHIRPath just for consistency with nearby code.
-- When in doubt which side of that line a given piece of logic falls on, ask rather than guess —
-  this boundary is easy to misjudge in both directions (over-converting a trivial field read, and
-  under-converting real cross-bundle lookup logic) in the same change.
+- **Use FHIRPath** whenever the logic reads through an optional/array-shaped field (`CodeableConcept.coding`,
+  `Reference`-typed arrays, etc.), filters a collection, type-filters a polymorphic field (`ofType()`,
+  with the `fhirpath_r4_model` model from `'fhirpath/fhir-context/r4'`), or resolves a
+  cross-bundle/cross-reference lookup (e.g. finding the `Bundle.entry` matching a `Reference`) —
+  **even a single `.first()`/`.single()` with no `.where()` at all still counts**, because
+  `coding`/similar fields are still 0..* and still need safe traversal. This is especially true once
+  the extractor is shared across more than one call site: `getAppointmentTypeCode = compileAsFirst<Appointment,
+  string>('Appointment.appointmentType.coding.code.first()')`, reused by every container that needs
+  the appointment type, is the right call — centralizing the traversal in one compiled function
+  beats re-deriving `appointment.appointmentType?.coding?.[0]?.code` at each call site. Compare
+  `getReferralTypeCode`/`getReferralChannelCode` (`src/utils/referral.ts`), which need a `.where(system=...)`
+  filter for the same reason but aren't otherwise different in kind.
+- **Use plain TypeScript** only when there is *no FHIR resource structure to navigate at all* — the
+  logic is purely combining values already in hand, e.g. building a `Reference` string from a known
+  `resourceType` and `id` (`` `Practitioner/${id}` ``). There's nothing here for FHIRPath to do
+  differently from a template literal, so don't convert it just for consistency with nearby FHIRPath
+  code.
+- When in doubt, ask rather than guess — this boundary has been misjudged in both directions: converting
+  zero-navigation literal/string construction to FHIRPath, and *also* mistakenly calling a shared,
+  resource-navigating single-field extractor "trivial" and reverting it to plain TypeScript because
+  it happened to lack a `.where()` filter. Presence of a filter is not the test; resource-shape
+  navigation is.
 
 ### Use `evaluate` for runtime expressions
 

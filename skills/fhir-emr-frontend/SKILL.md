@@ -23,9 +23,12 @@ EMR-specific frontend conventions. Applies when editing `src/` in the fhir-emr r
 6. **Do:** Type API-loaded resources as `WithId<R>`, parameterizing the **uberComponent's own
    generic** (e.g. `ResourceListPage<WithId<Task>>`) rather than casting/guarding per callback. See
    [REFERENCE.md](REFERENCE.md#withidr-for-api-loaded-resources).
-7. **Do:** Reserve FHIRPath for genuine search/filter logic, type-filtering, or cross-bundle/
-   cross-reference lookups; use plain TypeScript for trivial single-field reads or straightforward
-   string construction. See [REFERENCE.md](REFERENCE.md#fhirpath-vs-plain-typescript).
+7. **Do:** Reserve FHIRPath for anything that navigates a FHIR resource's array/optional-shaped
+   structure (even a single `.first()` with no `.where()`), filters/type-filters a collection, or
+   does a cross-bundle/cross-reference lookup; use plain TypeScript only when there's no resource
+   structure to navigate at all (e.g. building a `Reference` string from values already in hand).
+   A `.where()` filter is not the dividing line — resource-shape navigation is. See
+   [REFERENCE.md](REFERENCE.md#fhirpath-vs-plain-typescript).
 8. **Do:** Evaluate FHIRPath through the `src/utils/fhirpath.ts` wrapper (`compileAsFirst` / `compileAsArray` / `evaluate`), never `fhirpath.evaluate` directly. See [REFERENCE.md](REFERENCE.md#fhirpath-in-the-frontend).
 9. **Do:** Cover all `utils/fhirpath` helpers with tests.
 10. **Do:** Error/fallback UI (e.g. an "unable to load" state) should name the specific failed
