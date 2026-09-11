@@ -2,6 +2,44 @@
 
 Deep detail behind [SKILL.md](SKILL.md). React/TypeScript conventions specific to the `fhir-emr` frontend (`src/`).
 
+## Uber components and framework mechanisms first
+
+Before writing any bespoke page/component/form, run these checks in order — don't rely on
+recalling the list, check it against the concrete requirement at hand:
+
+1. **Does an uberComponent fit?** Check `ResourceListPage` / `ResourceListPageContent` /
+   `ResourceDetailPage` / `QuestionnaireModal` / `ViewChart` against the actual requirement (e.g.
+   does `DetailPageProps<R>`'s `tabs[].component` render-prop cover a page that resolves related
+   resources across a bundle?). Only write a custom page once you've identified a specific gap an
+   uberComponent can't cover.
+2. **Does another shared framework mechanism already solve this?** Before hand-rolling logic that
+   feels like it should be a common need (e.g. passing ambient resource context into a
+   `QuestionnaireResponseForm`), check for an existing mechanism — e.g. `ClinicalContext` /
+   `useClinicalContext` / `getResourceClinicalContext` instead of building a manual
+   `launchContextParameters` array. Grep the framework source for the concept by name ("context",
+   "launch") when unsure whether one exists.
+3. **Does your own in-progress work already establish a pattern?** Before adding a new
+   container, re-check other containers already added in the same feature/session (list pages,
+   detail pages, attachment viewers, etc.) and mirror their uberComponent/mechanism choices rather
+   than solving the same problem a different way each time.
+
+## WithId<R> for API-loaded resources
+
+Type resources loaded from the API as `WithId<R>` to make `.id` non-optional and remove the
+null-checks/casts that would otherwise be needed everywhere it's read. Prefer parameterizing an
+**uberComponent's own generic** with `WithId<R>` (e.g. `ResourceListPage<WithId<Task>>`,
+`ResourceDetailPage<WithId<Task>>`, `ResourceListPageContent<WithId<Patient>>`) so the type
+propagates through every derived callback prop automatically. Avoid per-callback `as WithId<R>`
+casts or runtime `if (!id) return …` guards — if you find yourself writing one, it usually means
+the generic should have been parameterized higher up instead.
+
+## Error and fallback UI
+
+Error/fallback UI (e.g. an "unable to load" state) should surface which specific lookup failed and
+the concrete id/reference involved, not just a generic message — this is what makes a failure
+traceable back to a specific resource instead of requiring a follow-up round-trip to ask "which
+one?".
+
 ## Components
 
 1. Each component is placed in a directory named after the component function, with the main file located in `ComponentName/index.tsx`.
@@ -69,6 +107,21 @@ const getLineItems = compileAsArray<Bundle, InvoiceLineItem>('Bundle.entry.resou
 ```
 
 The expression is parsed once at module load, call sites document source/result types, and render code stays small and testable. Use `compileAsFirst` only when the expression is intentionally scalar; use `compileAsArray` when multiple matches are meaningful (`answerOption.valueCoding`, line items, interpretations, repeated answers).
+
+### FHIRPath vs plain TypeScript
+
+Deciding to use `compileAsFirst`/`compileAsArray` at all is a separate question from *how* to
+invoke FHIRPath once you've decided to. Scope FHIRPath deliberately:
+
+- **Use FHIRPath** for genuine search/filter logic, type-filtering polymorphic collections
+  (`ofType()`, with the `fhirpath_r4_model` model from `'fhirpath/fhir-context/r4'`), or
+  cross-bundle/cross-reference lookups (e.g. finding the `Bundle.entry` matching a `Reference`).
+- **Use plain TypeScript** for trivial single-field reads or straightforward string construction
+  (e.g. building a `Reference` from a known `resourceType` and `id`) — don't convert these to
+  FHIRPath just for consistency with nearby code.
+- When in doubt which side of that line a given piece of logic falls on, ask rather than guess —
+  this boundary is easy to misjudge in both directions (over-converting a trivial field read, and
+  under-converting real cross-bundle lookup logic) in the same change.
 
 ### Use `evaluate` for runtime expressions
 

@@ -11,14 +11,28 @@ EMR-specific frontend conventions. Applies when editing `src/` in the fhir-emr r
 
 ## Quick Do/Don't
 
-1. **Do:** Place each component in its own directory with `index.tsx`, `hooks.ts`, `types.ts`, `utils.ts`.
-2. **Do:** Keep business logic in `hooks.ts`; components stay presentational.
-3. **Do:** Use Ant Design theme — no hardcoded colors.
-4. **Do:** Use guard clauses (early returns for negative cases).
-5. **Do:** Evaluate FHIRPath through the `src/utils/fhirpath.ts` wrapper (`compileAsFirst` / `compileAsArray` / `evaluate`), never `fhirpath.evaluate` directly. See [REFERENCE.md](REFERENCE.md#fhirpath-in-the-frontend).
-6. **Do:** Cover all `utils/fhirpath` helpers with tests.
-7. **Don't:** Leave `console.log` / `console.error` / `console.warn` in committed code.
-8. **Don't:** Use nested ternary operators.
+1. **Do:** Before writing a bespoke page/component/form, check whether an uberComponent
+   (`ResourceListPage` / `ResourceListPageContent` / `ResourceDetailPage` / `QuestionnaireModal` /
+   `ViewChart`) fits, and check for other shared framework mechanisms (e.g. `ClinicalContext` for
+   passing ambient resource context into a `QuestionnaireResponseForm`) before hand-rolling
+   equivalent logic. See [REFERENCE.md](REFERENCE.md#uber-components-and-framework-mechanisms-first).
+2. **Do:** Place each component in its own directory with `index.tsx`, `hooks.ts`, `types.ts`, `utils.ts`.
+3. **Do:** Keep business logic in `hooks.ts`; components stay presentational.
+4. **Do:** Use Ant Design theme — no hardcoded colors.
+5. **Do:** Use guard clauses (early returns for negative cases).
+6. **Do:** Type API-loaded resources as `WithId<R>`, parameterizing the **uberComponent's own
+   generic** (e.g. `ResourceListPage<WithId<Task>>`) rather than casting/guarding per callback. See
+   [REFERENCE.md](REFERENCE.md#withidr-for-api-loaded-resources).
+7. **Do:** Reserve FHIRPath for genuine search/filter logic, type-filtering, or cross-bundle/
+   cross-reference lookups; use plain TypeScript for trivial single-field reads or straightforward
+   string construction. See [REFERENCE.md](REFERENCE.md#fhirpath-vs-plain-typescript).
+8. **Do:** Evaluate FHIRPath through the `src/utils/fhirpath.ts` wrapper (`compileAsFirst` / `compileAsArray` / `evaluate`), never `fhirpath.evaluate` directly. See [REFERENCE.md](REFERENCE.md#fhirpath-in-the-frontend).
+9. **Do:** Cover all `utils/fhirpath` helpers with tests.
+10. **Do:** Error/fallback UI (e.g. an "unable to load" state) should name the specific failed
+    lookup and the concrete id/reference involved, not a generic message. See
+    [REFERENCE.md](REFERENCE.md#error-and-fallback-ui).
+11. **Don't:** Leave `console.log` / `console.error` / `console.warn` in committed code.
+12. **Don't:** Use nested ternary operators.
 
 ## Related skills
 

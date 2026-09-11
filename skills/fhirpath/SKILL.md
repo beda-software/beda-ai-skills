@@ -28,7 +28,7 @@ When something breaks, first decide which layer it is: a bad `{% for %}` placeme
 ## Universal rules (apply everywhere)
 
 1. **Collections, not scalars.** Every expression returns an array; an empty result (`{}`) is normal. Guard with `.exists()`, take singletons with `.first()` / `.single()`.
-2. **Never add optional values with `+`.** `A + B` returns `{}` if either side is empty. Sum a collection instead: `(...).where(linkId='a' or linkId='b').answer.valueQuantity.value.sum()` — `.sum()` ignores empties and returns 0 for an all-empty collection.
+2. **Never combine optional values with `+`.** `A + B` returns `{}` if either side is empty — true for numeric addition *and* string concatenation. For numbers, sum a collection instead: `(...).where(linkId='a' or linkId='b').answer.valueQuantity.value.sum()` — `.sum()` ignores empties and returns 0 for an all-empty collection. For strings, use `&` instead — it treats an empty operand as `''` rather than propagating emptiness — guarded with `iif()` when a separator should only appear alongside the optional part: `name & iif(specialty.exists(), ' (' & specialty & ')', '')`.
 3. **Use specific `value[x]` access**, not generic `.answer.value`: `.answer.valueString`, `.answer.valueCoding.code`, `.answer.valueQuantity.value`.
 4. **Cast DateTime variables before comparing.** The engine serialises `%var` DateTimes as `String`; comparing without a cast throws a type mismatch. Use `... <= %CurrentTime.toDateTime()`.
 5. **Pass data via `%variables`/context, not string interpolation.** Interpolating values into the expression string breaks on quotes/special chars. See [REFERENCE.md](REFERENCE.md#prefer-variables-over-string-interpolation).

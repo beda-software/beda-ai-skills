@@ -36,6 +36,18 @@ Expressions return arrays; empty results (`{}`) are normal and propagate.
 
 `.sum()` ignores empty entries and returns `0` for an all-empty collection.
 
+### Join, don't concatenate, optional strings
+
+The same empty-propagation applies to `+` used as string concatenation — joining a required field
+with an optional one silently wipes the whole result the moment the optional side is absent (e.g.
+a name concatenated with an optional specialty). Use `&` instead: it treats an empty operand as
+`''` rather than propagating `{}`. Guard a separator that should only appear alongside the optional
+part with `iif()`:
+
+```text
+name.family & iif(specialty.exists(), ' (' & specialty & ')', '')
+```
+
 ### Specific value[x] access
 
 Use the typed accessor, not generic `.value`:
