@@ -34,10 +34,12 @@ proves nothing. Mechanics (including how `complex` + `and:` pollutes unrelated o
    allow case fail for missing data and reads as a policy bug. Prefix ids with `{{run_id}}`
    so teardown finds them.
 4. **Test allow and deny for every operation the policy authorizes.** For own-scoped SQL
-   policies (read/patch/update/delete by id) that means by-id requests against a resource
-   *linked* to the acting identity (allow) and the same op against an *unlinked* resource
-   of someone else (deny). Search and create alone leave the `WHERE` clause unexercised: a
-   no-op that matches everyone would pass.
+   policies (read/patch/update/delete by id) that means by-id requests against a `-match`
+   fixture linked to the acting identity (allow) and the same op against an `-unlinked`
+   resource of someone else (deny, proven by the dump). A conditional PATCH whose search
+   params name the caller's patient but whose `_id` is a `-mismatch` fixture returns 404:
+   follow it with an admin read proving the target is untouched. Search and create alone
+   leave the `WHERE` clause unexercised: a no-op that matches everyone would pass.
 5. **Assert the dump on every `__debug=policy` request.** The flag returns HTTP 200 with a
    policy dump whether the real request would be allowed or denied, so the assertions
    carry the verdict. Pair `eval-result` with the `.id`/`.error` projections:
@@ -62,7 +64,9 @@ proves nothing. Mechanics (including how `complex` + `and:` pollutes unrelated o
    jsonpath "$.policies[?(@.error)].error" not exists
    ```
 
-   Projecting `.id` and `.error` makes a failure name the policy and the SQL error. Field
+   Projecting `.id` and `.error` makes a failure name the policy and the SQL error. Where
+   another policy could also allow the request, pin the culprit:
+   `jsonpath "$.policies[?(@['eval-result'] == true)].id" == "<policy-under-test>"`. Field
    names are kebab-case (`eval-result`); a SQL failure is singular `error`, a matcho
    mismatch is plural `errors`. Detail: [REFERENCE.md](REFERENCE.md#why-project-id--error).
 6. **Run the suite end to end** (setup → suites → teardown). Layout, isolated client,
@@ -71,7 +75,7 @@ proves nothing. Mechanics (including how `complex` + `and:` pollutes unrelated o
 
 ## Done when
 
-- [ ] Allow **and** deny cover every authorized op, by-id ones against linked and unlinked fixtures
+- [ ] Allow **and** deny cover every authorized op, by-id ones against `-match` and `-unlinked` fixtures
 - [ ] Every `__debug=policy` block carries `eval-result` plus the `.id`/`.error` pair
 - [ ] Fixture creates assert `HTTP 201`
 - [ ] Suite green under the runner script

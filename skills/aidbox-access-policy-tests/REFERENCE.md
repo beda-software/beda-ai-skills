@@ -48,6 +48,13 @@ clause didn't match exposes `errors` (a list of mismatched keys).
 FHIR resources with constraint invariants (e.g. a `Consent` needing `policyRule`) need a
 real `PUT`/create, because `__debug=policy` create requests often don't persist the resource.
 
+## Conditional PATCH checks the URL, not the body
+
+A conditional PATCH's search params (`?patient=…&_id=…`) match the **stored** resource; the
+body can still rewrite the reference (e.g. move an Appointment to another patient). Pin
+that behaviour with a test either way, and where the body must not change ownership, only
+the policy can guard it.
+
 ## Suite shape and teardown
 
 A convention that scales to many role × feature combinations:
