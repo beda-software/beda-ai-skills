@@ -1,6 +1,7 @@
 ---
 name: review-comments
-description: Review the comments a diff adds, before committing — a script extracts every added comment from Python (#, docstrings), JS/TS/TSX (//, /* */, JSX holes) and YAML/YML (#), then each one is judged against the comment rules — earns its place only if non-obvious, three lines at most, clearer naming preferred over prose, still true of the code. Use before every commit, at the lint/test stage, and when asked to review or clean up comments in changed code. Pass `manual` to have every block put to the user one at a time after the automatic pass.
+description: Review the comments a diff adds, before committing — a script extracts every added comment from Python (#, docstrings), JS/TS/TSX (//, /* */) and # comments in YAML, shell, Terraform/HCL, TOML, INI and Dockerfiles, then each one is judged against the comment rules — earns its place only if non-obvious, three lines at most, clearer naming preferred over prose, still true of the code. Use before every commit, at the lint/test stage, and when asked to review or clean up comments in changed code. Pass `manual` to have every block put to the user one at a time after the automatic pass.
+user_invocable: true
 ---
 
 # Review comments
@@ -23,7 +24,7 @@ In a repo that isn't the current project itself — a shared library, an open-so
 
 ## The procedure
 
-Applying the rules above to a diff, in three steps, so that no added comment goes unjudged.
+Applying the rules above to a diff, step by step, so that no added comment goes unjudged.
 
 **Modes.** By default the pass is automatic: judge every block and apply the verdicts. When the invocation
 carries `manual`, the automatic pass still runs first — then every block goes to the user one at a time for
@@ -60,9 +61,6 @@ action does a reader take? No answer — `delete`.
 | `shorten` | The point is real and fits in fewer lines. Bound: 1–2 lines, 3 at the absolute limit; a docstring is one line unless a second answers "why not the obvious alternative". |
 | `rename` | The comment explains what better names would say. Name the rename or the extracted function that retires it. |
 | `delete` | Restates the line below, states a fact about the data rather than the code, records history ("now", "used to be"), or no longer matches the code. |
-
-The trap that makes rule 1 fail: a fact that took a long investigation *feels* non-obvious, so it reads as
-worth keeping. The test is what is non-obvious **to a reader of this code**, not to whoever just derived it.
 
 ### 3. Report and apply
 

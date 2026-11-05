@@ -450,10 +450,10 @@ def scan_line(line: str, slash: bool) -> tuple[int | None, int | None, str | Non
 
             i += 1
 
-        if quote is None:
-            break
         # An unterminated quote is usually an apostrophe in a plain scalar, not a
         # string; rescanning without quoting is better than missing the comment.
+        if quote is None:
+            break
 
     return None, None, None
 
