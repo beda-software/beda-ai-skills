@@ -41,6 +41,11 @@ To install into a single project only: `~/beda-ai-skills/install.sh ~/work/fhir-
 
 **To force a specific skill**, mention it by name in your prompt: *"Using the fhir-emr-mapping skill, review this Mapping file."*
 
+**review-comments** runs on request: `/review-comments` judges and fixes every comment your diff adds;
+`/review-comments manual` then also walks you through each comment one at a time. To have it run before
+every commit, add to your `CLAUDE.md` / project `AGENTS.md`:
+`Run the review-comments skill over every diff before committing.`
+
 **Without Cursor or Claude Code** (other AI chats, code review, onboarding) — the skills are plain markdown: read `SKILL.md` for the rules, `REFERENCE.md` for details, or attach them to any AI chat as context.
 
 Step-by-step usage guide with worked examples: [skills/README.md](skills/README.md).
