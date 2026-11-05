@@ -98,7 +98,7 @@ def chdir_to_repo_root() -> None:
 def resolve_range(rev_range: str | None) -> tuple[list[str], str | None]:
     """Return the git diff arguments and the revision whose file content to scan."""
     if rev_range:
-        end = rev_range.split("..")[-1] or "HEAD"
+        end = rev_range.rsplit("..", 1)[-1] or "HEAD"
         return [rev_range], end
 
     return ["HEAD"], None
