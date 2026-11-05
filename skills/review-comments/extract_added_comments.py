@@ -13,6 +13,7 @@ import argparse
 import ast
 import io
 import os
+import re
 import subprocess
 import sys
 import tokenize
@@ -21,13 +22,22 @@ from pathlib import Path
 
 PY_SUFFIXES = {".py", ".pyi"}
 JS_SUFFIXES = {".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts"}
-HASH_SUFFIXES = {
-    ".yaml", ".yml", ".tf", ".tfvars", ".hcl", ".conf", ".cfg", ".ini",
-    ".toml", ".properties", ".tpl", ".sh", ".bash", ".zsh",
-}
+RUST_SUFFIXES = {".rs"}
+YAML_SUFFIXES = {".yaml", ".yml"}
+HURL_SUFFIXES = {".hurl"}
+SHELL_SUFFIXES = {".sh", ".bash", ".zsh"}
+HASH_SUFFIXES = {".conf", ".cfg", ".ini", ".toml", ".properties", ".tpl"}
 # HCL also takes // and /* */.
-SLASH_SUFFIXES = {".tf", ".tfvars", ".hcl"}
+HCL_SUFFIXES = {".tf", ".tfvars", ".hcl"}
 DOCKERFILE_PREFIX = "Dockerfile"
+MAKE_NAMES = {"Makefile", "makefile", "GNUmakefile"}
+
+YAML_BLOCK_SCALAR = re.compile(r"(?:^|\s)[|>][1-9+-]{0,2}$")
+
+SHELL_HEREDOC = re.compile(r"(?<!<)<<-?\s*\\?(['\"]?)([A-Za-z_][\w.-]*)\1")
+MAKE_COMMENT = re.compile(r"(?<!\\)#")
+
+RUST_RAW_STRING = re.compile(r'r(#*)"')
 
 REGEX_FORBIDDEN_BEFORE = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_)]}\"'`")
 
@@ -56,8 +66,8 @@ def main() -> int:
 
     reviewed, skipped = 0, []
     for path, lines in sorted(added.items()):
-        suffix = Path(path).suffix
-        if not (suffix in PY_SUFFIXES or suffix in JS_SUFFIXES or takes_hash_comments(path)):
+        finder = comment_finder(Path(path))
+        if finder is None:
             skipped.append(path)
             continue
 
@@ -66,12 +76,7 @@ def main() -> int:
             skipped.append(f"{path} (unreadable)")
             continue
 
-        if suffix in PY_SUFFIXES:
-            comments = find_py_comments(source)
-        elif suffix in JS_SUFFIXES:
-            comments = find_js_comments(source)
-        else:
-            comments = find_hash_comments(source, slash=suffix in SLASH_SUFFIXES)
+        comments = finder(source)
         touched = [c for c in comments if any(c.start <= n <= c.end for n in lines)]
         if not touched:
             continue
@@ -88,6 +93,29 @@ def main() -> int:
         print(f"Not scanned (unsupported or unreadable): {', '.join(skipped)}")
 
     return 0
+
+
+def comment_finder(path: Path):
+    if path.name in MAKE_NAMES or path.suffix == ".mk":
+        return find_make_comments
+    suffix = path.suffix
+    if suffix in PY_SUFFIXES:
+        return find_py_comments
+    if suffix in JS_SUFFIXES:
+        return find_js_comments
+    if suffix in RUST_SUFFIXES:
+        return find_rust_comments
+    if suffix in YAML_SUFFIXES:
+        return find_yaml_comments
+    if suffix in HURL_SUFFIXES:
+        return find_hurl_comments
+    if suffix in SHELL_SUFFIXES:
+        return find_shell_comments
+    if suffix in HCL_SUFFIXES:
+        return lambda source: find_hash_comments(source, slash=True)
+    if suffix in HASH_SUFFIXES or path.name.startswith(DOCKERFILE_PREFIX):
+        return find_hash_comments
+    return None
 
 
 def chdir_to_repo_root() -> None:
@@ -351,14 +379,266 @@ def skip_regex(source: str, i: int, line: int) -> tuple[int, int]:
     return i, line
 
 
-def run(cmd: list[str]) -> str:
-    return subprocess.run(cmd, capture_output=True, text=True, check=True).stdout
+def find_rust_comments(source: str) -> list[Comment]:
+    """Scan Rust character by character so strings, raw strings and char literals never match."""
+    comments: list[Comment] = []
+    i, line = 0, 1
+    n = len(source)
+
+    while i < n:
+        c = source[i]
+        nxt = source[i + 1] if i + 1 < n else ""
+
+        if c == "/" and nxt == "/":
+            end = source.find("\n", i)
+            end = n if end == -1 else end
+            text = source[i:end].strip()
+            last = comments[-1] if comments else None
+            line_start = source.rfind("\n", 0, i) + 1
+            if last and last.end == line - 1 and last.text.startswith("//") and not source[line_start:i].strip():
+                comments[-1] = Comment(last.start, line, f"{last.text}\n{text}")
+            else:
+                comments.append(Comment(line, line, text))
+            i = end
+            continue
+
+        if c == "/" and nxt == "*":
+            close = skip_nested_block_comment(source, i)
+            text = source[i:close]
+            comments.append(Comment(line, line + text.count("\n"), text))
+            line += text.count("\n")
+            i = close
+            continue
+
+        raw = RUST_RAW_STRING.match(source, i) if c == "r" and starts_rust_literal(source, i) else None
+        if raw:
+            terminator = '"' + raw.group(1)
+            close = source.find(terminator, raw.end())
+            close = n if close == -1 else close + len(terminator)
+        elif c == '"':
+            close, _ = skip_quoted(source, i, line, c)
+        elif c == "'":
+            close = skip_char_literal(source, i)
+        else:
+            if c == "\n":
+                line += 1
+            i += 1
+            continue
+
+        line += source.count("\n", i, close)
+        i = close
+
+    return sorted(comments, key=lambda c: c.start)
 
 
+def find_yaml_comments(source: str) -> list[Comment]:
+    """Collect # comments outside quoted and block scalars; consecutive own-line ones form one block."""
+    comments: list[Comment] = []
+    quote, block_indent, last_own_line = None, None, False
+    for line_no, raw in enumerate(source.splitlines(), start=1):
+        indent = len(raw) - len(raw.lstrip(" "))
+        if block_indent is not None:
+            if not raw.strip() or indent > block_indent:
+                continue
+            block_indent = None
 
-def takes_hash_comments(path: str) -> bool:
-    name = Path(path).name
-    return Path(path).suffix in HASH_SUFFIXES or name.startswith(DOCKERFILE_PREFIX)
+        quote, hash_at = scan_yaml_line(raw, quote)
+        if hash_at is None:
+            content = raw
+        else:
+            content = raw[:hash_at]
+            last_own_line = add_hash_comment(comments, line_no, raw, hash_at, last_own_line)
+
+        if quote is None and YAML_BLOCK_SCALAR.search(content.rstrip()):
+            block_indent = indent
+
+    return comments
+
+
+def add_hash_comment(comments: list[Comment], line_no: int, raw: str, hash_at: int, last_own_line: bool) -> bool:
+    """Append the comment at hash_at, merging it into the previous own-line block; return whether it is own-line."""
+    text = raw[hash_at:].rstrip()
+    own_line = not raw[:hash_at].strip()
+    last = comments[-1] if comments else None
+    if own_line and last_own_line and last and last.end == line_no - 1:
+        comments[-1] = Comment(last.start, line_no, f"{last.text}\n{text}")
+    else:
+        comments.append(Comment(line_no, line_no, text))
+
+    return own_line
+
+
+def find_hurl_comments(source: str) -> list[Comment]:
+    """Collect # comments outside quoted strings and ``` bodies; consecutive own-line ones form one block."""
+    comments: list[Comment] = []
+    in_body, last_own_line = False, False
+    for line_no, raw in enumerate(source.splitlines(), start=1):
+        start = 0
+        if in_body:
+            fence = raw.find("```")
+            if fence == -1:
+                continue
+            in_body, start = False, fence + 3
+
+        in_body, hash_at = scan_hurl_line(raw, start)
+        if hash_at is not None:
+            last_own_line = add_hash_comment(comments, line_no, raw, hash_at, last_own_line)
+
+    return comments
+
+
+def scan_hurl_line(line: str, i: int) -> tuple[bool, int | None]:
+    """Return whether a ``` body is left open at line end and where a comment starts, if any."""
+    n = len(line)
+    while i < n:
+        c = line[i]
+        if c == "#" and (i == 0 or line[i - 1] in " \t"):
+            return False, i
+
+        if line.startswith("```", i):
+            close = line.find("```", i + 3)
+            if close == -1:
+                return True, None
+            i = close + 3
+            continue
+
+        if c == '"':
+            i, _ = skip_quoted(line, i, 0, c)
+            continue
+
+        if c == "`":
+            close = line.find("`", i + 1)
+            i = n if close == -1 else close + 1
+            continue
+
+        i += 1
+
+    return False, None
+
+
+def scan_yaml_line(line: str, quote: str | None) -> tuple[str | None, int | None]:
+    """Return the quote open at line end and where a comment starts; quotes open at token start, unlike `key: it's`."""
+    i, n = 0, len(line)
+    while i < n:
+        c = line[i]
+        if quote == "'":
+            if c == "'":
+                if line[i + 1 : i + 2] == "'":
+                    i += 1
+                else:
+                    quote = None
+        elif quote == '"':
+            if c == "\\":
+                i += 1
+            elif c == '"':
+                quote = None
+        elif c == "#" and (i == 0 or line[i - 1] in " \t"):
+            return None, i
+        elif c in "'\"" and (not line[:i].strip() or line[:i].rstrip()[-1] in ":-[{,?"):
+            quote = c
+        i += 1
+
+    return quote, None
+
+
+def find_shell_comments(source: str) -> list[Comment]:
+    """Collect # comments outside quotes and heredocs; consecutive own-line ones form one block."""
+    comments: list[Comment] = []
+    quote, heredoc, last_own_line = None, None, False
+    for line_no, raw in enumerate(source.splitlines(), start=1):
+        if heredoc:
+            if raw.strip() == heredoc:
+                heredoc = None
+            continue
+
+        if line_no == 1 and raw.startswith("#!"):
+            continue
+
+        quote, hash_at, heredoc = scan_shell_line(raw, quote)
+        if hash_at is not None:
+            last_own_line = add_hash_comment(comments, line_no, raw, hash_at, last_own_line)
+
+    return comments
+
+
+def scan_shell_line(line: str, quote: str | None) -> tuple[str | None, int | None, str | None]:
+    """Return the quote still open at line end, where a comment starts, and the heredoc delimiter it opens, if any."""
+    i, n, heredoc = 0, len(line), None
+    while i < n:
+        c = line[i]
+        if quote == "'":
+            if c == "'":
+                quote = None
+        elif quote == '"':
+            if c == "\\":
+                i += 1
+            elif c == '"':
+                quote = None
+        elif c == "\\":
+            i += 1
+        elif c == "#" and (i == 0 or line[i - 1] in " \t;&|()"):
+            return quote, i, heredoc
+        elif c in "'\"":
+            quote = c
+        elif match := SHELL_HEREDOC.match(line, i):
+            heredoc = heredoc or match.group(2)
+            i = match.end()
+            continue
+        i += 1
+
+    return quote, None, heredoc
+
+
+def find_make_comments(source: str) -> list[Comment]:
+    """Recipe lines go to the shell, so they follow its quoting; elsewhere any unescaped # starts a comment."""
+    comments: list[Comment] = []
+    last_own_line = False
+    for line_no, raw in enumerate(source.splitlines(), start=1):
+        if raw.startswith("\t"):
+            _, hash_at, _ = scan_shell_line(raw, None)
+        else:
+            match = MAKE_COMMENT.search(raw)
+            hash_at = match.start() if match else None
+
+        if hash_at is not None:
+            last_own_line = add_hash_comment(comments, line_no, raw, hash_at, last_own_line)
+
+    return comments
+
+
+def starts_rust_literal(source: str, i: int) -> bool:
+    """True when the r at i opens a raw string (r"", br"", cr"") rather than ending an identifier."""
+    if i > 0 and source[i - 1] in "bc":
+        i -= 1
+
+    return i == 0 or not (source[i - 1].isalnum() or source[i - 1] == "_")
+
+
+def skip_nested_block_comment(source: str, i: int) -> int:
+    depth = 0
+    while i < len(source):
+        if source.startswith("/*", i):
+            depth, i = depth + 1, i + 2
+        elif source.startswith("*/", i):
+            depth, i = depth - 1, i + 2
+            if not depth:
+                return i
+        else:
+            i += 1
+
+    return i
+
+
+def skip_char_literal(source: str, i: int) -> int:
+    """Skip 'x' or '\\n'; a quote that closes neither is a lifetime or label, so only it is skipped."""
+    if source[i + 1 : i + 2] == "\\":
+        close = source.find("'", i + 3)
+        return len(source) if close == -1 else close + 1
+
+    if source[i + 2 : i + 3] == "'":
+        return i + 3
+
+    return i + 1
 
 
 def find_hash_comments(source: str, slash: bool = False) -> list[Comment]:
@@ -438,11 +718,10 @@ def scan_line(line: str, slash: bool) -> tuple[int | None, int | None, str | Non
             elif slash and line.startswith("//", i):
                 return i, None, None
             elif slash and line.startswith("/*", i):
-                end = line.find("*/", i + 2)
-                if end == -1:
+                if line.find("*/", i + 2) == -1:
                     return None, i, None
 
-                i = end + 1
+                return i, None, None
             elif slash and line.startswith("<<", i):
                 terminator = heredoc_terminator(line[i + 2 :])
                 if terminator:
@@ -468,6 +747,11 @@ def heredoc_terminator(rest: str) -> str:
             break
 
     return ident
+
+
+def run(cmd: list[str]) -> str:
+    return subprocess.run(cmd, capture_output=True, text=True, check=True).stdout
+
 
 if __name__ == "__main__":
     try:

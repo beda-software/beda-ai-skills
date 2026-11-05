@@ -1,6 +1,7 @@
 ---
 name: review-comments
-description: Review the comments a diff adds, before committing — a script extracts every added comment from Python (#, docstrings), JS/TS/TSX (//, /* */) and # comments in YAML, shell, Terraform/HCL, TOML, INI and Dockerfiles, then each one is judged against the comment rules — earns its place only if non-obvious, three lines at most, clearer naming preferred over prose, still true of the code. Use before every commit, at the lint/test stage, and when asked to review or clean up comments in changed code. Pass `manual` to have every block put to the user one at a time after the automatic pass.
+description: >-
+  Review the comments a diff adds: a script extracts every added comment, then each is judged against the comment rules (earns its place only if non-obvious to a reader of the code, three lines at most, clearer naming preferred over prose, still true of the code). Use before every commit, and when asked to review or clean up comments in changed code. Pass `manual` to have every block put to the user one at a time after the automatic pass.
 user_invocable: true
 ---
 

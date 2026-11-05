@@ -64,7 +64,7 @@ Step-by-step usage guide with worked examples: [skills/README.md](skills/README.
 | Python Aidbox app conventions | [aidbox-python-conventions](skills/aidbox-python-conventions/SKILL.md) |
 | React / TypeScript UI (`src/`) | [fhir-emr-frontend](skills/fhir-emr-frontend/SKILL.md) |
 | i18n / locale strings | [translate](skills/translate/SKILL.md) |
-| Comments added by a diff (Python, JS/TS, YAML, shell, HCL, Dockerfile), before commit | [review-comments](skills/review-comments/SKILL.md) |
+| Comments added by a diff, before commit | [review-comments](skills/review-comments/SKILL.md) |
 
 ### Where these skills apply
 
