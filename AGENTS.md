@@ -37,8 +37,14 @@ To install into a single project only: `~/beda-ai-skills/install.sh ~/work/fhir-
 | "I get 403 'resource not available in Organization'" | `aidbox-orgbac-multitenancy` |
 | "Add a component for the patient card" | `fhir-emr-frontend` |
 | "Translate the new strings" | `translate` |
+| "Review the comments in my diff before I commit" | `review-comments` |
 
 **To force a specific skill**, mention it by name in your prompt: *"Using the fhir-emr-mapping skill, review this Mapping file."*
+
+**review-comments** runs on request: `/review-comments` judges and fixes every comment your diff adds;
+`/review-comments manual` then also walks you through each comment one at a time. To have it run before
+every commit, add to your `CLAUDE.md` / project `AGENTS.md`:
+`Run the review-comments skill over every diff before committing.`
 
 **Without Cursor or Claude Code** (other AI chats, code review, onboarding) — the skills are plain markdown: read `SKILL.md` for the rules, `REFERENCE.md` for details, or attach them to any AI chat as context.
 
@@ -58,6 +64,7 @@ Step-by-step usage guide with worked examples: [skills/README.md](skills/README.
 | Python Aidbox app conventions | [aidbox-python-conventions](skills/aidbox-python-conventions/SKILL.md) |
 | React / TypeScript UI (`src/`) | [fhir-emr-frontend](skills/fhir-emr-frontend/SKILL.md) |
 | i18n / locale strings | [translate](skills/translate/SKILL.md) |
+| Comments added by a diff (Python, JS/TS, YAML), before commit | [review-comments](skills/review-comments/SKILL.md) |
 
 ### Where these skills apply
 

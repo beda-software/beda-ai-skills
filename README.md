@@ -30,6 +30,13 @@ HTTPS: `git clone https://github.com/beda-software/beda-ai-skills.git ~/beda-ai-
 
 Options: `--cursor` (default), `--claude`, `--global`, `--project /path`, `--target /path/to/skills`.
 
+**Optional: install a single skill** — copy its folder, e.g. `review-comments` for Claude Code:
+
+```bash
+mkdir -p ~/.claude/skills
+cp -R ~/beda-ai-skills/skills/review-comments ~/.claude/skills/
+```
+
 **Updates:**
 
 ```bash
