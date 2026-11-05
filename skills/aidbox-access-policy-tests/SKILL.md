@@ -1,10 +1,7 @@
 ---
 name: aidbox-access-policy-tests
 description: >-
-  Aidbox AccessPolicy Hurl tests (__debug=policy, eval-result, allow/deny
-  fixtures). Use when writing or extending a Hurl suite for role-based or
-  own-scoped access, when adding or changing AccessPolicy YAML, or when a policy
-  test passed despite :auth/policy-error or a SQL syntax error in the logs.
+  Aidbox AccessPolicy Hurl tests. Use when writing or extending a Hurl suite for an AccessPolicy, or when a policy test passed despite :auth/policy-error or a SQL error in the logs.
 ---
 
 # Aidbox AccessPolicy Hurl tests
