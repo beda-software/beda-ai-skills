@@ -37,6 +37,7 @@ To install into a single project only: `~/beda-ai-skills/install.sh ~/work/fhir-
 | "I get 403 'resource not available in Organization'" | `aidbox-orgbac-multitenancy` |
 | "Add a component for the patient card" | `fhir-emr-frontend` |
 | "Translate the new strings" | `translate` |
+| "Review the comments in my diff before I commit" | `review-comments` |
 
 **To force a specific skill**, mention it by name in your prompt: *"Using the fhir-emr-mapping skill, review this Mapping file."*
 
@@ -58,6 +59,7 @@ Step-by-step usage guide with worked examples: [skills/README.md](skills/README.
 | Python Aidbox app conventions | [aidbox-python-conventions](skills/aidbox-python-conventions/SKILL.md) |
 | React / TypeScript UI (`src/`) | [fhir-emr-frontend](skills/fhir-emr-frontend/SKILL.md) |
 | i18n / locale strings | [translate](skills/translate/SKILL.md) |
+| Comments added by a diff (Python, JS/TS, YAML), before commit | [review-comments](skills/review-comments/SKILL.md) |
 
 ### Where these skills apply
 
