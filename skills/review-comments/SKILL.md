@@ -23,6 +23,8 @@ Beware the trap that makes this rule fail: a fact that took a long investigation
 
 In a repo that isn't the current project itself — a shared library, an open-source dependency, anything with other consumers — keep comments about the code's own mechanism, not about why one particular downstream project needed it. Same rule as for commit messages: leave out org/deployment-specific context that only makes sense to one consumer.
 
+A comment must stand on its own for every future reader, so never point it at something that reader might not have: an untracked file (absent from anyone else's checkout), an ADR, or a GitHub issue (may be private, deleted, or just not cloned alongside the code). If the reasoning matters, state it inline; a pointer to a place some readers can't reach isn't a substitute.
+
 ## The procedure
 
 Applying the rules above to a diff, step by step, so that no added comment goes unjudged.
@@ -61,7 +63,7 @@ action does a reader take? No answer — `delete`.
 | `keep` | Answers the delete test: a hidden constraint, an external quirk, a decision whose alternative looks equally valid. |
 | `shorten` | The point is real and fits in fewer lines. Bound: 1–2 lines, 3 at the absolute limit; a docstring is one line unless a second answers "why not the obvious alternative". |
 | `rename` | The comment explains what better names would say. Name the rename or the extracted function that retires it. |
-| `delete` | Restates the line below, states a fact about the data rather than the code, records history ("now", "used to be"), or no longer matches the code. |
+| `delete` | Restates the line below, states a fact about the data rather than the code, records history ("now", "used to be"), points at an untracked file/ADR/GitHub issue instead of stating the reasoning inline, or no longer matches the code. |
 
 ### 3. Report and apply
 
