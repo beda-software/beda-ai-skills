@@ -17,6 +17,7 @@ import re
 import subprocess
 import sys
 import tokenize
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -66,7 +67,7 @@ def main() -> int:
 
     reviewed, skipped = 0, []
     for path, lines in sorted(added.items()):
-        finder = comment_finder(Path(path))
+        finder = get_comment_finder(Path(path))
         if finder is None:
             skipped.append(path)
             continue
@@ -95,7 +96,7 @@ def main() -> int:
     return 0
 
 
-def comment_finder(path: Path):
+def get_comment_finder(path: Path) -> Callable[[str], list[Comment]] | None:
     if path.name in MAKE_NAMES or path.suffix == ".mk":
         return find_make_comments
     suffix = path.suffix
@@ -382,7 +383,7 @@ def skip_regex(source: str, i: int, line: int) -> tuple[int, int]:
 def find_rust_comments(source: str) -> list[Comment]:
     """Scan Rust character by character so strings, raw strings and char literals never match."""
     comments: list[Comment] = []
-    i, line = 0, 1
+    i, line, last_own_line = 0, 1, False
     n = len(source)
 
     while i < n:
@@ -394,11 +395,12 @@ def find_rust_comments(source: str) -> list[Comment]:
             end = n if end == -1 else end
             text = source[i:end].strip()
             last = comments[-1] if comments else None
-            line_start = source.rfind("\n", 0, i) + 1
-            if last and last.end == line - 1 and last.text.startswith("//") and not source[line_start:i].strip():
+            own_line = not source[source.rfind("\n", 0, i) + 1 : i].strip()
+            if own_line and last_own_line and last and last.end == line - 1 and last.text.startswith("//"):
                 comments[-1] = Comment(last.start, line, f"{last.text}\n{text}")
             else:
                 comments.append(Comment(line, line, text))
+            last_own_line = own_line
             i = end
             continue
 
@@ -440,7 +442,7 @@ def find_yaml_comments(source: str) -> list[Comment]:
         if block_indent is not None:
             if not raw.strip() or indent > block_indent:
                 # A block scalar usually embeds a config or script, whose comments a reviewer still reads.
-                _, hash_at = scan_yaml_line(raw, None)
+                _, hash_at, _ = scan_shell_line(raw, None)
                 if hash_at is not None:
                     last_own_line = add_hash_comment(comments, line_no, raw, hash_at, last_own_line)
                 continue
@@ -585,6 +587,10 @@ def scan_shell_line(line: str, quote: str | None) -> tuple[str | None, int | Non
             return quote, i, heredoc
         elif c in "'\"":
             quote = c
+        elif line.startswith("((", i):
+            close = line.find("))", i + 2)
+            i = n if close == -1 else close + 2
+            continue
         elif match := SHELL_HEREDOC.match(line, i):
             heredoc = heredoc or match.group(2)
             i = match.end()

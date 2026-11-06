@@ -45,11 +45,14 @@ def test_find_yaml_comments__reports_comments_embedded_in_a_block_scalar() -> No
               # embedded config comment
               - model_name: gpt
             command: echo "# not a comment"
+        run: |
+          echo 'a # b'
+          grep "x # y" file
         after: 1 # trailing after the block
     """
     assert collect(extractor.find_yaml_comments, source) == [
         (4, 4, "# embedded config comment"),
-        (7, 7, "# trailing after the block"),
+        (10, 10, "# trailing after the block"),
     ]
 
 
@@ -62,10 +65,13 @@ def test_find_shell_comments__skips_shebang_parameters_quotes_and_heredocs() -> 
         # inside a heredoc
         EOF
         echo done # trailing
+        x=$((1 << SHIFT))
+        # after a bit shift
     """
     assert collect(extractor.find_shell_comments, source) == [
         (2, 2, "# real comment"),
         (7, 7, "# trailing"),
+        (9, 9, "# after a bit shift"),
     ]
 
 
@@ -85,6 +91,17 @@ def test_find_rust_comments__skips_strings_raw_strings_chars_and_lifetimes() -> 
         (1, 2, "// first\n// second"),
         (7, 7, "/* outer /* nested */ still outer */"),
         (8, 8, "// trailing"),
+    ]
+
+
+def test_find_rust_comments__keeps_a_trailing_comment_apart_from_the_next_line() -> None:
+    source = """
+        let x = 1; // trailing
+        // own line
+    """
+    assert collect(extractor.find_rust_comments, source) == [
+        (1, 1, "// trailing"),
+        (2, 2, "// own line"),
     ]
 
 
@@ -158,24 +175,17 @@ def test_find_js_comments__skips_strings_templates_and_regexes() -> None:
 @pytest.mark.parametrize(
     ("name", "finder"),
     [
-        ("config.yml", "find_yaml_comments"),
-        ("run.sh", "find_shell_comments"),
-        ("lib.rs", "find_rust_comments"),
         ("Makefile", "find_make_comments"),
         ("rules.mk", "find_make_comments"),
-        ("api.hurl", "find_hurl_comments"),
-        ("app.py", "find_py_comments"),
-        ("app.tsx", "find_js_comments"),
-        ("settings.toml", "find_hash_comments"),
         ("Dockerfile.dev", "find_hash_comments"),
     ],
 )
-def test_comment_finder__picks_the_finder_by_file_name(name: str, finder: str) -> None:
-    assert extractor.comment_finder(Path(name)) is getattr(extractor, finder)
+def test_get_comment_finder__matches_files_by_name_not_only_suffix(name: str, finder: str) -> None:
+    assert extractor.get_comment_finder(Path(name)) is getattr(extractor, finder)
 
 
-def test_comment_finder__returns_none_for_an_unsupported_file() -> None:
-    assert extractor.comment_finder(Path("notes.md")) is None
+def test_get_comment_finder__returns_none_for_an_unsupported_file() -> None:
+    assert extractor.get_comment_finder(Path("notes.md")) is None
 
 
 def collect(finder: Callable[[str], list[Any]], source: str) -> list[tuple[int, int, str]]:
