@@ -35,6 +35,7 @@ To install into a single project only: `~/beda-ai-skills/install.sh ~/work/fhir-
 | "Write an extraction mapping for this form" | `fhir-emr-mapping` |
 | "Why does my FHIRPath expression return empty / how do I sum optional fields?" | `fhirpath` |
 | "I get 403 'resource not available in Organization'" | `aidbox-orgbac-multitenancy` |
+| "Write Hurl tests proving this AccessPolicy allows/denies correctly" | `aidbox-access-policy-tests` |
 | "Add a component for the patient card" | `fhir-emr-frontend` |
 | "Translate the new strings" | `translate` |
 | "Review the comments in my diff before I commit" | `review-comments` |
@@ -60,6 +61,7 @@ Step-by-step usage guide with worked examples: [skills/README.md](skills/README.
 | `resources/**/Mapping/**/*.yaml` | [fhir-emr-mapping](skills/fhir-emr-mapping/SKILL.md) |
 | FHIRPath expressions (Questionnaire, Mapping, frontend TS, backend) | [fhirpath](skills/fhirpath/SKILL.md) |
 | OrgBAC, multi-tenancy, AccessPolicy | [aidbox-orgbac-multitenancy](skills/aidbox-orgbac-multitenancy/SKILL.md) |
+| Hurl tests for AccessPolicy allow/deny | [aidbox-access-policy-tests](skills/aidbox-access-policy-tests/SKILL.md) |
 | Aidbox Python App operations | [aidbox-python-app-operation](skills/aidbox-python-app-operation/SKILL.md) |
 | Python Aidbox app conventions | [aidbox-python-conventions](skills/aidbox-python-conventions/SKILL.md) |
 | React / TypeScript UI (`src/`) | [fhir-emr-frontend](skills/fhir-emr-frontend/SKILL.md) |
@@ -81,12 +83,14 @@ aidbox-python-conventions┘
 
 fhir-emr-questionnaire / fhir-emr-mapping ──► aidbox-orgbac-multitenancy  (org-scoped extraction)
 aidbox-python-app-operation ──────────────► aidbox-orgbac-multitenancy
+aidbox-orgbac-multitenancy ───────────────► aidbox-access-policy-tests  (verify policies with Hurl)
 ```
 
 - **Questionnaire + Mapping** skills cover YAML authoring rules (including Quick Do/Don't checklists).
 - **fhirpath** covers the FHIRPath expression language shared by Questionnaire, Mapping, frontend, and backend — it is NOT FPML (the Mapping templating language, which lives in `fhir-emr-mapping`).
 - **fhir-emr-frontend** covers React/TypeScript conventions specific to this EMR repo.
 - **aidbox-orgbac-multitenancy** is needed when forms or operations run org-scoped.
+- **aidbox-access-policy-tests** is the testing companion to `aidbox-orgbac-multitenancy` — use it to prove an `AccessPolicy` allows/denies correctly with Hurl, not just to design one.
 - **aidbox-python-app-operation** and **aidbox-python-conventions** apply to Aidbox Python apps.
 
 ---
