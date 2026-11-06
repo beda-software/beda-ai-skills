@@ -432,14 +432,19 @@ def find_rust_comments(source: str) -> list[Comment]:
 
 
 def find_yaml_comments(source: str) -> list[Comment]:
-    """Collect # comments outside quoted and block scalars; consecutive own-line ones form one block."""
+    """Collect # comments outside quoted scalars; consecutive own-line ones form one block."""
     comments: list[Comment] = []
     quote, block_indent, last_own_line = None, None, False
     for line_no, raw in enumerate(source.splitlines(), start=1):
         indent = len(raw) - len(raw.lstrip(" "))
         if block_indent is not None:
             if not raw.strip() or indent > block_indent:
+                # A block scalar usually embeds a config or script, whose comments a reviewer still reads.
+                _, hash_at = scan_yaml_line(raw, None)
+                if hash_at is not None:
+                    last_own_line = add_hash_comment(comments, line_no, raw, hash_at, last_own_line)
                 continue
+
             block_indent = None
 
         quote, hash_at = scan_yaml_line(raw, quote)
