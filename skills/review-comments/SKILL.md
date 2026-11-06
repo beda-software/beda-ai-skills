@@ -1,6 +1,7 @@
 ---
 name: review-comments
-description: Review the comments a diff adds, before committing — a script extracts every added comment from Python (#, docstrings), JS/TS/TSX (//, /* */) and # comments in YAML, shell, Terraform/HCL, TOML, INI and Dockerfiles, then each one is judged against the comment rules — earns its place only if non-obvious, three lines at most, clearer naming preferred over prose, still true of the code. Use before every commit, at the lint/test stage, and when asked to review or clean up comments in changed code. Pass `manual` to have every block put to the user one at a time after the automatic pass.
+description: >-
+  Review the comments a diff adds: a script extracts every added comment, then each is judged against the comment rules (earns its place only if non-obvious to a reader of the code, three lines at most, clearer naming preferred over prose, still true of the code). Use before every commit, and when asked to review or clean up comments in changed code. Pass `manual` to have every block put to the user one at a time after the automatic pass.
 user_invocable: true
 ---
 
@@ -21,6 +22,8 @@ A comment describes the **code**. A fact about the **data** — how many seeds m
 Beware the trap that makes this rule fail: a fact that took a long investigation to derive *feels* non-obvious, so the "comment the non-obvious" rule fires on it. The test is what is non-obvious **to a reader of this code**, not to whoever just derived it. Before keeping a comment, ask: if I delete this line, what wrong action does a reader take? No answer — delete it. A docstring is one line by default; a second line only earns its place by answering "why not the obvious alternative".
 
 In a repo that isn't the current project itself — a shared library, an open-source dependency, anything with other consumers — keep comments about the code's own mechanism, not about why one particular downstream project needed it. Same rule as for commit messages: leave out org/deployment-specific context that only makes sense to one consumer.
+
+A comment must stand on its own for every future reader, so never point it at something that reader might not have: an untracked file (absent from anyone else's checkout), an ADR, or a GitHub issue (may be private, deleted, or just not cloned alongside the code). If the reasoning matters, state it inline; a pointer to a place some readers can't reach isn't a substitute.
 
 ## The procedure
 
@@ -60,7 +63,7 @@ action does a reader take? No answer — `delete`.
 | `keep` | Answers the delete test: a hidden constraint, an external quirk, a decision whose alternative looks equally valid. |
 | `shorten` | The point is real and fits in fewer lines. Bound: 1–2 lines, 3 at the absolute limit; a docstring is one line unless a second answers "why not the obvious alternative". |
 | `rename` | The comment explains what better names would say. Name the rename or the extracted function that retires it. |
-| `delete` | Restates the line below, states a fact about the data rather than the code, records history ("now", "used to be"), or no longer matches the code. |
+| `delete` | Restates the line below, states a fact about the data rather than the code, records history ("now", "used to be"), points at an untracked file/ADR/GitHub issue instead of stating the reasoning inline, or no longer matches the code. |
 
 ### 3. Report and apply
 
