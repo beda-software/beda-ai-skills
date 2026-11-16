@@ -26,6 +26,8 @@ Applies to any `resources/**/Questionnaire/**/*.yaml`.
 8. **Do:** Read each answer once into a `variable` on the closest group that contains every item using it, and build
    derived values from other variables.
 9. **Don't:** Use `enableWhenExpression`; gate the item with a plain `enableWhen` on a hidden calculated item instead.
+10. **Do:** Place a hidden calculated item used only by an `enableWhen` right before the item it gates, as its
+    sibling, not at the root.
 
 ## Core extensions
 
@@ -55,8 +57,10 @@ it), read each answer once, and derive further values from other variables:
 
 Don't use `enableWhenExpression`. Put the condition, or the value it depends on, in a hidden calculated item and gate
 the item with a plain `enableWhen` — the shape
-[sdc-qrf#48](https://github.com/beda-software/sdc-qrf/pull/48) proposes rewriting `enableWhenExpression` into. Worked
-example:
+[sdc-qrf#48](https://github.com/beda-software/sdc-qrf/pull/48) proposes rewriting `enableWhenExpression` into. A
+calculated item that exists only for that `enableWhen` goes right before the gated item, as its sibling; it moves up
+to the closest common parent only when items in several places share it.
+Worked example:
 [REFERENCE.md § Visibility](REFERENCE.md#visibility-hidden-calculated-item--enablewhen).
 
 ## FHIRPath essentials
