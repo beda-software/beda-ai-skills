@@ -12,7 +12,8 @@ Deep detail behind [SKILL.md](SKILL.md). Use this document when editing `resourc
 ## 2) Core extensions/FCE you will use often
 
 - `calculatedExpression` — computed item value (frontend-evaluated).
-- `enableWhenExpression` — computed visibility (frontend-evaluated).
+- `enableWhenExpression` — computed visibility (frontend-evaluated). Avoid it; see
+  [Visibility](#visibility-hidden-calculated-item--enablewhen).
 - `initialExpression` — initial value (backend-evaluated).
 - `_text.cqfExpression` — dynamic display text (frontend-evaluated).
 - `itemConstraint` — validation rule (backend-evaluated).
@@ -41,7 +42,8 @@ Examples:
 
 ### Frontend-evaluated expressions
 
-For `calculatedExpression`, `enableWhenExpression`, `variable`:
+For `calculatedExpression`, `enableWhenExpression` (avoid it, see
+[Visibility](#visibility-hidden-calculated-item--enablewhen)), `variable`:
 - `%resource` = current QuestionnaireResponse (preferred)
 - `%questionnaire` = Questionnaire definition (preferred)
 - `%qitem` = current Questionnaire item
@@ -86,6 +88,85 @@ iif(%context.answer.exists(), %context.answer.valueDateTime, now())
   .valueDecimal
   .sum()
 ```
+
+### Variables: compute each value once
+
+A `variable` is visible to every expression on the item that declares it and on all its descendants.
+Declare it on the closest group that contains every item using it; put it on the Questionnaire root only when the
+whole form needs it. Read each answer once, then derive further values from other variables:
+
+```yaml
+- linkId: measurements
+  type: group
+  variable:
+    - name: AIn
+      language: text/fhirpath
+      expression: "%resource.repeat(item).where(linkId='a-in').answer.valueQuantity.value.first()"
+    - name: ACm
+      language: text/fhirpath
+      expression: "%resource.repeat(item).where(linkId='a-cm').answer.valueQuantity.value.first()"
+    - name: A
+      language: text/fhirpath
+      expression: "iif(%AIn.exists(), (%AIn * 2.54).round(1), %ACm)"
+  item:
+    - linkId: a-in
+      ...
+    - linkId: a-cm
+      ...
+    - linkId: a-summary
+      ...
+```
+
+Every item inside `measurements` can read `%AIn`, `%ACm` and `%A`; items outside it cannot.
+
+### Sum of optional variables
+
+```yaml
+variable:
+  - name: ScoreA
+    language: text/fhirpath
+    expression: "%resource.repeat(item).where(linkId='score-a').answer.valueInteger.first()"
+  - name: ScoreB
+    language: text/fhirpath
+    expression: "%resource.repeat(item).where(linkId='score-b').answer.valueInteger.first()"
+  - name: Total
+    language: text/fhirpath
+    expression: "iif(%ScoreA.exists() or %ScoreB.exists(), %ScoreA.combine(%ScoreB).sum(), {})"
+```
+
+- `combine`, not `|`: `|` drops duplicates, so `2 | 2` is a single `2`.
+- The `iif` guard keeps `%Total` empty when nothing is entered; `sum()` of empty is `0`.
+
+### Visibility: hidden calculated item + enableWhen
+
+Don't use `enableWhenExpression`; [sdc-qrf#48](https://github.com/beda-software/sdc-qrf/pull/48) proposes rewriting
+it into this shape. Put the value in a hidden calculated item and gate the dependent item with a plain `enableWhen`:
+
+```yaml
+- linkId: total
+  type: integer
+  hidden: true
+  calculatedExpression:
+    language: text/fhirpath
+    expression: "%Total"
+...
+- linkId: total-line
+  type: display
+  enableWhen:
+    - question: total
+      operator: exists
+      answerBoolean: true
+  _text:
+    cqfExpression:
+      language: text/fhirpath
+      expression: "'Total: ' & %Total.toString()"
+```
+
+- `exists` is true when the question has at least one answer.
+- For a calculated **boolean** flag use `operator: "="` with `answerBoolean: true`, never `exists`: a computed
+  `false` is still an answer, so `exists` would show the item exactly when it should be hidden.
+- `enableWhen` may reference a linkId at another nesting level, e.g. a nested item gated by a root hidden item.
+- `_text` needs no `''` fallback for an empty `%Total`: `enableWhen` already hides the item then.
 
 ## 7) Summation patterns in repeating group-table
 
