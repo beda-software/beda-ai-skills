@@ -165,6 +165,7 @@ it into this shape. Put the value in a hidden calculated item and gate the depen
 - `exists` is true when the question has at least one answer.
 - For a calculated **boolean** flag use `operator: "="` with `answerBoolean: true`, never `exists`: a computed
   `false` is still an answer, so `exists` would show the item exactly when it should be hidden.
+- `enableWhen` may reference a linkId at any nesting level.
 - `_text` needs no `''` fallback for an empty `%Total`: `enableWhen` already hides the item then.
 
 **Placement.** A hidden calculated item that exists only to gate an item's `enableWhen` goes immediately before that
@@ -193,13 +194,7 @@ belongs:
           answerBoolean: true
 ```
 
-- `enableWhen` may reference a linkId at another nesting level. Use that only when several items in different
-  places share one flag: put the flag in their closest common parent.
-- The same holds inside groups with special item controls:
-  - `group-voice`: voice fill (populate) skips hidden, readOnly and calculated items and everything under them, so it
-    never writes into the flag. No need to keep calculated items out of a voice group.
-  - `wizard`: renderers keep hidden children out of the steps but still mount them, so the flag still calculates and
-    adds no step.
+- A flag shared by items in several places goes in their closest common parent.
 
 ## 7) Summation patterns in repeating group-table
 

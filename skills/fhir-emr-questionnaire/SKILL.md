@@ -58,8 +58,8 @@ it), read each answer once, and derive further values from other variables:
 Don't use `enableWhenExpression`. Put the condition, or the value it depends on, in a hidden calculated item and gate
 the item with a plain `enableWhen` — the shape
 [sdc-qrf#48](https://github.com/beda-software/sdc-qrf/pull/48) proposes rewriting `enableWhenExpression` into. A
-calculated item that exists only for that `enableWhen` goes right before the gated item, as its sibling, also inside
-`group-voice` and `wizard` groups; it moves up to the closest common parent only when items in several places share it.
+calculated item that exists only for that `enableWhen` goes right before the gated item, as its sibling; it moves up
+to the closest common parent only when items in several places share it.
 Worked example:
 [REFERENCE.md § Visibility](REFERENCE.md#visibility-hidden-calculated-item--enablewhen).
 
