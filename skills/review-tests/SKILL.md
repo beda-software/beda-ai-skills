@@ -28,21 +28,19 @@ Drop a test when it:
 - **guards a deletion**: code removed on purpose has no test to keep it removed — unless the removal is the fix (a
   leaked field, an open endpoint, a bug);
 - **pins a branch only test data reaches**: input no production writer can produce, and the schema or validation rules
-  it out. In FHIR stores other clients, imports and old data write the same resources, so "our code always sets it" is
-  not enough. Propose deleting the dead branch too;
+  it out. When other services, imports or old data write the same records (a shared FHIR server, a shared database),
+  "our code always sets it" is not enough. Propose deleting the dead branch too;
 - **can't fail**: it still passes when the code it targets is broken, or it asserts what its own setup wrote;
-- **restates a constant**, or a value the code never touches — not a mapping test, where carrying the field across is
-  the feature;
-- **repeats a filter of the same kind** as one already tested (a second `_lastUpdated` age bound): merge it into that
-  test's cases, or drop it, unless the filter is the point of the change.
+- **restates a constant**, or a value the code never touches — not a mapping or serializer test, where carrying the
+  field across is the feature;
+- **repeats a case of a kind already tested** (a second bound of the same date filter, a second invalid value of the
+  same field): merge it into that test's cases, or drop it, unless that case is the point of the change.
 
 Keep, even when it looks redundant:
 
-- one integration test per feature, through the real stack (database, endpoint), next to the unit tests of its pure
-  helpers;
-- a test that pins a bug a review or QA found;
-- an assertion that the change's main output contains the new thing (a prompt list, a response field), when the bug was
-  that it didn't.
+- one integration test per feature, through the real stack (database and endpoint, or the rendered screen), next to
+  the unit tests of its pure helpers;
+- a test that pins a bug a review or QA found, even a plain check that the output now contains what was missing.
 
 When a keep rule and a drop rule both match, keep wins.
 
@@ -84,8 +82,9 @@ Never cut a behaviour the user or a reviewer asked to have tested, even if a dro
 Report the table, then the totals: tests before and after, test lines saved per file.
 
 Apply `merge` and `fold`, and `drop` for tests the diff added. A `drop` of a test that existed before the diff is a
-proposal: list it, don't delete it. When the caller asked for a report only, apply nothing.
+proposal: list it, don't delete it. When asked for a report only, apply nothing.
 
 After applying, remove the helpers, factory parameters and imports the cuts leave unused, and run the affected test
-modules once in non-watch mode (`--watchAll=false` for Jest). If a run fails, undo the verdict that broke it and keep
+modules once with the project's own test command (see its AGENTS.md), in non-watch mode (`--watchAll=false` for Jest,
+`vitest run`). If a run fails, undo the verdict that broke it and keep
 that test.
