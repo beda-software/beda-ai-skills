@@ -38,6 +38,7 @@ To install into a single project only: `~/beda-ai-skills/install.sh ~/work/fhir-
 | "Add a component for the patient card" | `fhir-emr-frontend` |
 | "Translate the new strings" | `translate` |
 | "Review the comments in my diff before I commit" | `review-comments` |
+| "Do we need all these tests? Trim them" | `review-tests` |
 
 **To force a specific skill**, mention it by name in your prompt: *"Using the fhir-emr-mapping skill, review this Mapping file."*
 
@@ -45,6 +46,10 @@ To install into a single project only: `~/beda-ai-skills/install.sh ~/work/fhir-
 `/review-comments manual` then also walks you through each comment one at a time. To have it run before
 every commit, add to your `CLAUDE.md` / project `AGENTS.md`:
 `Run the review-comments skill over every diff before committing.`
+
+**review-tests** runs on request too: `/review-tests` gives every test a diff adds or changes a keep / merge / fold /
+drop verdict, names the test or rule that justifies each cut, and applies the verdicts. Ask for a report only to review
+without edits.
 
 **Without Cursor or Claude Code** (other AI chats, code review, onboarding) — the skills are plain markdown: read `SKILL.md` for the rules, `REFERENCE.md` for details, or attach them to any AI chat as context.
 
@@ -65,6 +70,7 @@ Step-by-step usage guide with worked examples: [skills/README.md](skills/README.
 | React / TypeScript UI (`src/`) | [fhir-emr-frontend](skills/fhir-emr-frontend/SKILL.md) |
 | i18n / locale strings | [translate](skills/translate/SKILL.md) |
 | Comments added by a diff, before commit | [review-comments](skills/review-comments/SKILL.md) |
+| Tests added or changed by a diff, before commit | [review-tests](skills/review-tests/SKILL.md) |
 
 ### Where these skills apply
 
