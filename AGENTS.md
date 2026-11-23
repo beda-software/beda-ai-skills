@@ -46,6 +46,12 @@ To install into a single project only: `~/beda-ai-skills/install.sh ~/work/fhir-
 every commit, add to your `CLAUDE.md` / project `AGENTS.md`:
 `Run the review-comments skill over every diff before committing.`
 
+**fix-cve** runs only on request, never automatically. `/fix-cve oss` scans the Beda open-source packages in
+[skills/fix-cve/repos.txt](skills/fix-cve/repos.txt) with Trivy, opens one PR per repo with the smallest non-major
+dependency bumps and a patch version bump, waits for CI and reports a table with the PR links; after you merge them,
+`/fix-cve release` asks to confirm the new tags and creates the GitHub releases. `/fix-cve <owner/repo>` does the same
+for one repo without the version bump and release. Plain `/fix-cve` asks which.
+
 **Without Cursor or Claude Code** (other AI chats, code review, onboarding) — the skills are plain markdown: read `SKILL.md` for the rules, `REFERENCE.md` for details, or attach them to any AI chat as context.
 
 Step-by-step usage guide with worked examples: [skills/README.md](skills/README.md).
@@ -65,6 +71,7 @@ Step-by-step usage guide with worked examples: [skills/README.md](skills/README.
 | React / TypeScript UI (`src/`) | [fhir-emr-frontend](skills/fhir-emr-frontend/SKILL.md) |
 | i18n / locale strings | [translate](skills/translate/SKILL.md) |
 | Comments added by a diff, before commit | [review-comments](skills/review-comments/SKILL.md) |
+| HIGH/CRITICAL CVEs in Beda open-source packages (`/fix-cve` only) | [fix-cve](skills/fix-cve/SKILL.md) |
 
 ### Where these skills apply
 
