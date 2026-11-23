@@ -35,8 +35,9 @@ arguments the script scans every line of repos.txt:
 <skill-dir>/scan.sh <workdir> [owner/repo[:Dockerfile] ...]
 ```
 
-The `:Dockerfile` suffix names the Dockerfile of the image the repo publishes; without it only the source tree is
-scanned. For a single-repo target, check the repo's publish workflow and pass the Dockerfile it builds — never a
+The `:Dockerfile` suffix names the Dockerfiles of the images the repo publishes, comma-separated
+(`owner/repo:Dockerfile,app/Dockerfile`); each is built with its own directory as the build context. Without it only
+the source tree is scanned. For a single-repo target, check the repo's publish workflow and pass the Dockerfile it builds — never a
 development Dockerfile that installs and builds the whole app.
 
 The script clones each repo into `<workdir>/<repo>`, runs Trivy on the source tree, and when a Dockerfile is named
@@ -100,6 +101,9 @@ Commit messages are the subject line only, with no body, issue reference or co-a
 Fix CVE findings in <package>, <package>
 Bump to <new version>
 ```
+
+A repo that uses conventional commits (`fix:`, `chore(release):` in its log) gets `fix: CVE findings in <package>,
+<package>` instead, and no bump commit: its release automation turns the `fix:` commit into a patch release.
 
 A single-repo target, and an open-source repo without a version file, gets only the first commit. An open-source
 repo with a version file whose findings are all OS packages on a floating base tag gets only the second; its PR title

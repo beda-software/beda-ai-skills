@@ -7,3 +7,4 @@ beda-software/fhirpath-py
 Aidbox/aidbox-python-sdk
 beda-software/sdc-qrf
 beda-software/fhir-questionnaire
+beda-software/fhirsnake:Dockerfile

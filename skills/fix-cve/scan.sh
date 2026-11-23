@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Usage: scan.sh <new-workdir> [owner/repo[:Dockerfile] ...]     (no repos: every line of repos.txt)
+# Usage: scan.sh <new-workdir> [owner/repo[:Dockerfile[,dir/Dockerfile]] ...]     (no repos: every line of repos.txt)
 
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORKDIR="${1:?Usage: scan.sh <new-workdir> [owner/repo[:Dockerfile] ...]}"
+WORKDIR="${1:?Usage: scan.sh <new-workdir> [owner/repo[:Dockerfile[,dir/Dockerfile]] ...]}"
 shift
 TRIVY_IMAGE="aquasec/trivy:0.75.0"
 TRIVY_CACHE_VOLUME="fix-cve-trivy-cache"
@@ -45,9 +45,9 @@ download_trivy_databases() {
 scan_repo() {
   local target="$1"
   local repo="${target%%:*}"
-  local dockerfile=""
+  local dockerfiles=""
   if [[ "$target" == *:* ]]; then
-    dockerfile="${target#*:}"
+    dockerfiles="${target#*:}"
   fi
   local name="${repo#*/}"
   local checkout="$WORKDIR/$name"
@@ -59,17 +59,28 @@ scan_repo() {
 
   run_trivy "$checkout:/src:ro" fs /src > "$WORKDIR/reports/$name.fs.json" \
     || echo "!! $name: source scan failed" >&2
-  if [[ -n "$dockerfile" ]]; then
-    scan_image "$name" "$checkout" "$checkout/$dockerfile"
+  for dockerfile in ${dockerfiles//,/ }; do
+    scan_image "$name" "$checkout/$dockerfile" "$(get_image_scan_label "$dockerfile")"
+  done
+}
+
+get_image_scan_label() {
+  local context
+  context="$(dirname "$1")"
+  if [[ "$context" == "." ]]; then
+    echo "image"
+    return
   fi
+
+  echo "image-${context//\//-}"
 }
 
 scan_image() {
   local name="$1"
-  local checkout="$2"
-  local dockerfile="$3"
-  local image="fix-cve/$name:scan"
-  if ! docker build --quiet --pull --platform "$PLATFORM" --file "$dockerfile" --tag "$image" "$checkout" > /dev/null; then
+  local dockerfile="$2"
+  local label="$3"
+  local image="fix-cve/$name:$label"
+  if ! docker build --quiet --pull --platform "$PLATFORM" --file "$dockerfile" --tag "$image" "$(dirname "$dockerfile")" > /dev/null; then
     image="$(find_final_base_image "$dockerfile")"
     if [[ -z "$image" ]]; then
       echo "!! $name: docker build failed, image not scanned" >&2
@@ -80,7 +91,7 @@ scan_image() {
   fi
 
   run_trivy /var/run/docker.sock:/var/run/docker.sock image --platform "$PLATFORM" "$image" \
-    > "$WORKDIR/reports/$name.image.json" \
+    > "$WORKDIR/reports/$name.$label.json" \
     || echo "!! $name: image scan failed" >&2
 }
 
