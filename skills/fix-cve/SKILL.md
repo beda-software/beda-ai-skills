@@ -72,8 +72,13 @@ How to apply it, by where the package comes from:
 
 Keep the base image's variant: a move to `-slim` or Alpine drops tools (`curl` in a healthcheck, `bash` in a script).
 
-In libraries (packages published to PyPI or npm, as opposed to applications) change only lockfiles; keep the
-published dependency ranges unless the range itself excludes the fix.
+A library (a package published to PyPI or npm) ships its dependency ranges, not its lockfile: each consumer resolves
+and scans its own. So a library's source-tree finding counts only when its published ranges keep consumers on the
+vulnerable version. Follow the lockfile's chain from the library's direct dependency down to the package
+(`npm view <pkg>@<version> dependencies`). When every range on it allows the fixed version, report the finding as
+`consumer lock` and change nothing. When one excludes it (`query-string ^7` → `decode-uri-component ^0.2.2`, fixed
+only in 0.5.1), raise the library's direct dependency to the lowest version whose chain allows the fix; a major there
+is `major only`. Findings in an image the repo publishes are fixed like any application's.
 
 Show the plan as one table (repo, package, installed → target, change), then start fixing without waiting.
 
@@ -147,7 +152,7 @@ Only when every PR's checks are finished, give one table:
 | fhir-sdc | 2.4.2 → 2.4.3 | certifi | 2026.6.17 | lock → 2026.10.19 | <url> | passed |
 | jute-microservice | 0.1.4 → 0.1.5 | musl (alpine 3.24.2) | 1.2.5-r10 | release republishes the image | <url> | passed |
 
-List every finding from step 1: fixed ones with their PR, and `major only`, `rebuild only` or failed
+List every finding from step 1: fixed ones with their PR, and `major only`, `rebuild only`, `consumer lock` or failed
 ones with the reason. Merging stays with the maintainer; end by telling them to run `/fix-cve release` once the PRs are
 merged, naming any repos without a PR that need a release to republish their image. Applications that pin a
 released package or image tag get their own `/fix-cve <owner/repo>` once the release is out.
