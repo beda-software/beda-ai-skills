@@ -1,0 +1,7 @@
+beda-software/fhir-sdc
+beda-software/aidbox-file-uploader
+beda-software/questionnaire-fce-fhir-converter
+beda-software/jute-microservice
+beda-software/fhir-py
+beda-software/fhirpath-py
+Aidbox/aidbox-python-sdk
