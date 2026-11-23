@@ -91,7 +91,7 @@ Spawn one subagent per repo that has at least one planned change, all in one mes
   tags don't follow (`0.0.0`, or `1.0.0` with no matching tag);
 - with a bump, and when the repo keeps a `CHANGELOG.md`, add an entry for the new version in its existing format
   listing the fixed packages;
-- create branch `fix-cve-<YYYY-MM-DD>` with two commits, subject lines below: first the dependency fixes, then the
+- create branch `fix-cve-<YYYY-MM-DD>` (`-2`, `-3`… when that branch already exists on the remote) with two commits, subject lines below: first the dependency fixes, then the
   version bump with the changelog entry; do not push;
 - reply with each package's old and new version, the old and new package version, or why a row could not be applied.
 
