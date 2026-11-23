@@ -32,11 +32,15 @@ Make a fresh empty work directory and scan the default branch (`main` or `master
 arguments the script scans every line of repos.txt:
 
 ```bash
-<skill-dir>/scan.sh <workdir> [owner/repo ...]
+<skill-dir>/scan.sh <workdir> [owner/repo[:Dockerfile] ...]
 ```
 
-The script clones each repo into `<workdir>/<repo>`, runs Trivy on the source tree, and when the repo has a
-Dockerfile builds the image for `linux/amd64` with a freshly pulled base and scans that too (the base image's OS
+The `:Dockerfile` suffix names the Dockerfile of the image the repo publishes; without it only the source tree is
+scanned. For a single-repo target, check the repo's publish workflow and pass the Dockerfile it builds — never a
+development Dockerfile that installs and builds the whole app.
+
+The script clones each repo into `<workdir>/<repo>`, runs Trivy on the source tree, and when a Dockerfile is named
+builds the image for `linux/amd64` with a freshly pulled base and scans that too (the base image's OS
 packages only show up there). When the build fails (a Dockerfile that expects CI artifacts) it scans the final stage's
 base image instead. It prints one TSV line per fixable finding and keeps them in `<workdir>/findings.tsv`; raw reports
 are in `<workdir>/reports/`. Lines starting with `!!` name what could not be scanned: list them in the report.
@@ -64,8 +68,8 @@ How to apply it, by where the package comes from:
 The scan builds with `--pull`, so an OS finding that survives it on a floating tag is not fixed upstream yet: report it
 as `no upstream fix`.
 
-In libraries (fhir-py, fhirpath-py, aidbox-python-sdk) change only lockfiles; keep the published dependency ranges
-unless the range itself excludes the fix.
+In libraries (fhir-py, fhirpath-py, aidbox-python-sdk, sdc-qrf, fhir-questionnaire) change only lockfiles; keep the
+published dependency ranges unless the range itself excludes the fix.
 
 Show the plan as one table (repo, package, installed → target, change), then start fixing without waiting.
 
@@ -78,11 +82,12 @@ Spawn one subagent per repo that has at least one planned change, all in one mes
   churn (if the lock tool rewrites unrelated entries, retry with its single-package mode);
 - run the repo's lock tool through `uvx` / `npx` / `docker` when it is not installed, in lock-only mode
   (`poetry lock`, `npm install --package-lock-only`); never run tests, builds or a full install: CI checks the PR;
-- open-source target only, and only when the package's source holds its version (`__version__` in `__init__.py`,
-  which `pyproject.toml` may read as a dynamic version): bump its patch there and wherever else that same version is
-  written (grep it). No bump when the version comes from tags (setuptools-scm) or release automation
-  (semantic-release, release-please), and none for a placeholder `version` in `pyproject.toml` / `package.json` that
-  the repo's tags don't follow;
+- open-source target only, and only when the package's source holds the version its tags follow (`__version__` in
+  `__init__.py`, which `pyproject.toml` may read as a dynamic version; `version` in an npm package's
+  `package.json`): bump its patch there and wherever else that same version is written (grep it). A pre-release bumps
+  its counter instead (`1.1.0-alpha.15` → `1.1.0-alpha.16`). No bump when the version comes from tags
+  (setuptools-scm) or release automation (semantic-release, release-please), and none for a placeholder version the
+  tags don't follow (`0.0.0`, or `1.0.0` with no matching tag);
 - with a bump, and when the repo keeps a `CHANGELOG.md`, add an entry for the new version in its existing format
   listing the fixed packages;
 - create branch `fix-cve-<YYYY-MM-DD>` with two commits, subject lines below: first the dependency fixes, then the
@@ -154,8 +159,9 @@ For each merged one work out, without cloning:
   `gh api repos/<owner/repo>/tags`);
 - new version: the one in the PR's `Bump to <version>` commit; with no such commit, the previous version's patch + 1.
 
-Keep the existing tag style (`v2.4.2` or `2.4.2`). When the repo has no tags yet, or the latest is a pre-release
-(`v3.0.0a2`), propose a version and mark the row `confirm version`.
+Keep the existing tag style (`v2.4.2` or `2.4.2`). A pre-release line continues as a pre-release
+(`v1.1.0-alpha.15` → `v1.1.0-alpha.16`). When the repo has no tags yet, or the new version doesn't follow from the
+latest tag, propose a version and mark the row `confirm version`.
 
 Show one table and ask the maintainer to confirm, or correct a version, before creating anything:
 

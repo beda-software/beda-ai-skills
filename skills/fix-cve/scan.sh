@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Usage: scan.sh <new-workdir> [owner/repo ...]     (no repos: every line of repos.txt)
+# Usage: scan.sh <new-workdir> [owner/repo[:Dockerfile] ...]     (no repos: every line of repos.txt)
 
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORKDIR="${1:?Usage: scan.sh <new-workdir> [owner/repo ...]}"
+WORKDIR="${1:?Usage: scan.sh <new-workdir> [owner/repo[:Dockerfile] ...]}"
 shift
 TRIVY_IMAGE="aquasec/trivy:0.75.0"
 TRIVY_CACHE_VOLUME="fix-cve-trivy-cache"
@@ -23,8 +23,8 @@ main() {
   fi
   mkdir -p "$WORKDIR/reports"
   download_trivy_databases
-  for repo in "$@"; do
-    scan_repo "$repo" &
+  for target in "$@"; do
+    scan_repo "$target" &
   done
   wait
   summarize_reports | tee "$WORKDIR/findings.tsv"
@@ -43,7 +43,12 @@ download_trivy_databases() {
 }
 
 scan_repo() {
-  local repo="$1"
+  local target="$1"
+  local repo="${target%%:*}"
+  local dockerfile=""
+  if [[ "$target" == *:* ]]; then
+    dockerfile="${target#*:}"
+  fi
   local name="${repo#*/}"
   local checkout="$WORKDIR/$name"
   echo "== $repo" >&2
@@ -54,17 +59,18 @@ scan_repo() {
 
   run_trivy "$checkout:/src:ro" fs /src > "$WORKDIR/reports/$name.fs.json" \
     || echo "!! $name: source scan failed" >&2
-  if [[ -f "$checkout/Dockerfile" ]]; then
-    scan_image "$name" "$checkout"
+  if [[ -n "$dockerfile" ]]; then
+    scan_image "$name" "$checkout" "$checkout/$dockerfile"
   fi
 }
 
 scan_image() {
   local name="$1"
   local checkout="$2"
+  local dockerfile="$3"
   local image="fix-cve/$name:scan"
-  if ! docker build --quiet --pull --platform "$PLATFORM" --tag "$image" "$checkout" > /dev/null; then
-    image="$(find_final_base_image "$checkout/Dockerfile")"
+  if ! docker build --quiet --pull --platform "$PLATFORM" --file "$dockerfile" --tag "$image" "$checkout" > /dev/null; then
+    image="$(find_final_base_image "$dockerfile")"
     if [[ -z "$image" ]]; then
       echo "!! $name: docker build failed, image not scanned" >&2
       return
