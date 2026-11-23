@@ -64,15 +64,16 @@ scan_repo() {
   done
 }
 
+# The label goes into the report name after the last dot, so it must not contain one.
 get_image_scan_label() {
-  local context
-  context="$(dirname "$1")"
-  if [[ "$context" == "." ]]; then
+  local dockerfile="$1"
+  if [[ "$dockerfile" == "Dockerfile" ]]; then
     echo "image"
     return
   fi
 
-  echo "image-${context//\//-}"
+  local label="${dockerfile//\//-}"
+  echo "image-${label//./-}"
 }
 
 scan_image() {
@@ -98,9 +99,16 @@ scan_image() {
 # Prints nothing when the last stage starts from an earlier stage or a build argument.
 find_final_base_image() {
   local dockerfile="$1"
-  local base
-  base="$(grep -i '^FROM ' "$dockerfile" | tail -1 | awk '{print $2}')"
-  if [[ "$base" == *'$'* ]] || grep -q -i -E "^FROM .* AS $base\$" "$dockerfile"; then
+  local from_line
+  local base=""
+  from_line="$(grep -i '^FROM ' "$dockerfile" | tail -1)"
+  for word in ${from_line#* }; do
+    if [[ "$word" != --* ]]; then
+      base="$word"
+      break
+    fi
+  done
+  if [[ -z "$base" || "$base" == *'$'* ]] || grep -q -i -E "^FROM .* AS $base\$" "$dockerfile"; then
     return
   fi
 
